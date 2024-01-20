@@ -1,0 +1,7 @@
+
+-Using version ^11.4.0 for azure-search-documents
+    Updating dependencies
+    Resolving dependencies... (0.0s)
+    Incompatible constraints in requirements of semantic-kernel (0.4.5.dev):
+    azure-search-documents (>=11.4.0,<12.0.0)
+    azure-search-documents (==11.4.0b9)
