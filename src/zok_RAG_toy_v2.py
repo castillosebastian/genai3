@@ -17,22 +17,31 @@ load_dotenv()
 ai_search = AISearch()
 
 def format_hybrid_search_results(hybrid_search_results):
-    docs = [result['Text'] for result in hybrid_search_results]
+    formatted_results = [
+        f"""ID: {result['Id']}
+        Text: {result['Text']}
+        ExternalSourceName: {result['ExternalSourceName']}
+        Source: {result['Description']}
+        AdditionalMetadata: {result['AdditionalMetadata']}
+        """ for result in hybrid_search_results
+    ]
     formatted_string = ""
-    for i, doc in enumerate(docs):
+    for i, doc in enumerate(formatted_results):
         #formatted_string += f"\n<document {i+1}>\n\n {doc}\n"
         formatted_string += f"\n\"\"\" {doc}\n\"\"\"\n\n"
     return formatted_string
-    return formatted_string
+    
 
 sk_prompt = """
-You are a helpful financial assitant. Answer the user question based only on the information given in the documents:
-
 <History>
 {{$chat_history}}
 
 <Documents>
 <{{$docs}}> 
+
+You are a helpful financial assitant. 
+Answer the user question based only on the information given in the above documents.
+Add the 'Source' as citation.
 
 User:> {{$user_input}}
 ChatBot:>
@@ -60,7 +69,9 @@ async def chat(context_vars: sk.ContextVariables) -> bool:
 
         context_vars["user_input"] = user_input     
         
-        hybrid_search_results = await ai_search.search(query=user_input, query_type="hybrid", top=3)        
+        hybrid_search_results = await ai_search.search(query=user_input, query_type="hybrid", top=3,
+                                                       select_fields=["Text", "Id","ExternalSourceName",
+                                                                      "Description","AdditionalMetadata"])       
 
         docs =  format_hybrid_search_results(hybrid_search_results)
         

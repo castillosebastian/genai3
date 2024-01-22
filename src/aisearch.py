@@ -77,24 +77,42 @@ if __name__ == "__main__":
     ai_search = AISearch()
 
     # Example 1: Perform a simple search
-    simple_search_results = ai_search.search(query="Revenue of Microsoft", query_type="simple")
-    print("Simple Search Results:")
-    for result in simple_search_results:
-        print(f"ID: {result['Id']}, Text: {result['Text']}")
+    # simple_search_results = ai_search.search(query="Revenue of Microsoft", query_type="simple")
+    # print("Simple Search Results:")
+    # for result in simple_search_results:
+    #     print(f"ID: {result['Id']}, Text: {result['Text']}")
 
     # Example 2: Perform a hybrid search
-    hybrid_search_results = ai_search.search(query="Revenue of Microsoft", query_type="hybrid", top=3)
-    print("\nHybrid Search Results:")
-    for result in hybrid_search_results:
-        print(f"ID: {result['Id']}, Text: {result['Text']}")
+    hybrid_search_results = ai_search.search(query="Revenue of Microsoft", query_type="hybrid", top=3,
+                                             select_fields=["Text", "Id","ExternalSourceName",
+                                                                      "Description","AdditionalMetadata"])
+    print("\nHybrid Search Results:")    
+    # for result in hybrid_search_results:
+    #     print(f"ID: {result['Id']}\n")
+    #     print(f"Text: {result['Text']}\n")
+    #     print(f"ExternalSourceName: {result['ExternalSourceName']}\n")
+    #     print(f"Description: {result['Description']}\n")
+    #     print(f"AdditionalMetadata: {result['AdditionalMetadata']}\n")
+
+    # Formated for semantik-kernel pipeline
+    formatted_results = [
+        f"""ID: {result['Id']}
+        Text: {result['Text']}
+        ExternalSourceName: {result['ExternalSourceName']}
+        Source: {result['Description']}
+        AdditionalMetadata: {result['AdditionalMetadata']}
+        """ for result in hybrid_search_results
+    ]
+
+    print(formatted_results)
 
     # Example 3: Perform a hybrid search with filters
-    hybrid_wfilter_search_results = ai_search.search(
-        query="Revenue of Microsoft",
-        query_type="hybrid_wfilter",
-        filter="Description eq 'BESTBUY'",
-        select_fields=["Text", "Id", "Description", 'AdditionalMetadata', 'ExternalSourceName']
-    )
-    print("\nHybrid Search with Filters Results:")
-    for result in hybrid_wfilter_search_results:
-        print(f"ID: {result['Id']}, Text: {result['Text']}, Description: {result['Description']}")
+    # hybrid_wfilter_search_results = ai_search.search(
+    #     query="Revenue of Microsoft",
+    #     query_type="hybrid_wfilter",
+    #     filter="Description eq 'BESTBUY'",
+    #     select_fields=["Text", "Id", "Description", 'AdditionalMetadata', 'ExternalSourceName']
+    # )
+    # print("\nHybrid Search with Filters Results:")
+    # for result in hybrid_wfilter_search_results:
+    #     print(f"ID: {result['Id']}, Text: {result['Text']}, Description: {result['Description']}")
