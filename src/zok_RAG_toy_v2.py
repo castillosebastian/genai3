@@ -10,7 +10,7 @@
 import asyncio
 import semantic_kernel as sk
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
-from aisearch import AISearch
+from aisearch_async import AISearch
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -60,9 +60,11 @@ async def chat(context_vars: sk.ContextVariables) -> bool:
 
         context_vars["user_input"] = user_input     
         
-        hybrid_search_results = ai_search.search(query=user_input, query_type="hybrid", top=3)        
+        hybrid_search_results = await ai_search.search(query=user_input, query_type="hybrid", top=3)        
 
-        context_vars["docs"]   = format_hybrid_search_results(hybrid_search_results)
+        docs =  format_hybrid_search_results(hybrid_search_results)
+        
+        context_vars["docs"]  = docs
 
     except KeyboardInterrupt:
         print("\n\nExiting chat...")
@@ -77,6 +79,8 @@ async def chat(context_vars: sk.ContextVariables) -> bool:
     answer = await kernel.run_async(chat_function, input_vars=context_vars, )
     context_vars["chat_history"] += f"\nUser:> {user_input}\nChatBot:> {answer}\n"
 
+    print(f"Retrieved Documents:> {docs}")
+    print("-"*100)
     print(f"ChatBot:> {answer}")
     return True
 
@@ -84,9 +88,9 @@ async def chat(context_vars: sk.ContextVariables) -> bool:
 async def main() -> None:
     context = sk.ContextVariables()
     context["chat_history"] = ""  
-
+    
     chatting = True
-    while chatting:
+    while chatting:        
         chatting = await chat(context)
 
 
@@ -94,4 +98,5 @@ if __name__ == "__main__":
 
     #print(documents)
     #ask1 Compare the total Revenue of Microsoft for the years 2023, 2022 and 2021
+    #ask2 Explain the Revenue by reportable segment Domestic and International of Best By 2019 report
     asyncio.run(main())
