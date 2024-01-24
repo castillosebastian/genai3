@@ -1,0 +1,193 @@
+# GenAI Project Template and Notes (periodically updated)
+
+This repository maintains a limited selection of code, resources and articles related to the field of GenAI and its application to chatbots (with a focus on RAG-type architectures). The general purpose is to test the solutions proposed in this field using LLMs. Any contribution is welcome.    
+
+In this context, we divided the content of our notes and testing following the GenAI development applications model proposed in the course dictated by Deeplearning.ai. The model or template has 6 steps: 
+
+1. Define use case
+2. Chose an existing model or pre-train your own
+3. Adapt and align model
+   1. prompt engineering
+   2. fine tunning
+   3. align with human feedback
+4. Evaluate
+5. Optimize
+6. Deploy
+
+## RAG-Paradigms
+
+![Gao et all, 2023](image/RAG-Paradigms.png)
+[arxiv](http://arxiv.org/abs/2312.10997)
+
+## Tools and resources:
+  
+1. Use case: **GenAI for chatbot in the Finance Sector with RAG**:   
+   1. As a linguistic object, financial statements are characterized by a unique blend of features. They consist of formal, technical language with a heavy reliance on specialized financial and accounting terminology. The structure is highly standardized and regulated, ensuring a consistent format across various documents. The language is predominantly objective, focusing on quantitative data and factual information. It's also legally cautious, often including disclaimers and cautionary statements. Narrative elements are present, especially in sections like Management’s Discussion and Analysis (MD&A), providing qualitative insights. The use of passive voice is common, emphasizing actions and results over the entities performing them. Additionally, these documents feature a mix of concise yet comprehensive descriptions, ensuring clarity and specificity. Speculative language is used carefully in forward-looking statements, indicating projections and expectations. Companies may also be cautious in revealing sensitive data that could advantage competitors. Therefore, while financial statements provide key financial data, the presentation is often calibrated to serve both transparency and corporate strategy. 
+   2. Data characteristics and format? Rich format documents!
+      1. Tables: [Langchain_1](https://blog.langchain.dev/benchmarking-rag-on-tables/), Microsoft [tabletransformer](https://github.com/microsoft/table-transformer), [RAG-Table](https://github.com/langchain-ai/langchain/blob/master/cookbook/Semi_Structured_RAG.ipynb?ref=blog.langchain.dev), 
+         1. Table_reasoning [RegHNT](https://arxiv.org/pdf/2209.07692.pdf), [github](https://github.com/castillosebastian/RegHNT)
+         2. Table_reasoning [UniRPG](https://aclanthology.org/2022.emnlp-main.508.pdf), [github](https://github.com/phddamuge/UniRPG)
+      2. Stream_response: [langchain_1](https://github.com/pinecone-io/examples/blob/master/learn/generation/langchain/handbook/09-langchain-streaming/09-langchain-streaming.ipynb), [langchain](https://medium.com/databutton/stream-langchain-ai-abstractions-and-responses-in-your-web-app-langchain-tools-in-action-e37907779437)
+      3. Multimodality: [Langchain](https://github.com/langchain-ai/langchain/blob/master/cookbook/Semi_structured_multi_modal_RAG_LLaMA2.ipynb?ref=blog.langchain.dev), [RAG-table-image](https://github.com/langchain-ai/langchain/blob/master/cookbook/Semi_structured_and_multi_modal_RAG.ipynb?ref=blog.langchain.dev),      
+   3. Legal compliance requirements? *High Risk AI* according to [EU_AI_Act](https://artificialintelligenceact.com/), [Consumer_Financial_Protectional_Bureau_US_on_Chatbots](https://www.consumerfinance.gov/data-research/research-reports/chatbots-in-consumer-finance/chatbots-in-consumer-finance/), 
+   4. Solutions (well, almost): 
+      1. [RAG-ADVACE_Azure-AISearch-OpenAI](https://github.com/Azure-Samples/azure-search-openai-demo/blob/main/README.md), [RAG-SIPLE_Azure_AISearch-OpenAI](https://github.com/Azure-Samples/chat-with-your-data-solution-accelerator/blob/main/docs/LOCAL_DEPLOYMENT.md)
+         1. Test-OpenAI-Chat: [Playground](https://platform.openai.com/playground?mode=chat)
+      2. [SECInsights](https://github.com/run-llama/sec-insights)
+      3. [OpenAI-RAG](https://cookbook.openai.com/examples/fine-tuned_qa/ft_retrieval_augmented_generation_qdrant)
+      4. [Azure-GPT-RAG](https://github.com/Azure/GPT-RAG/tree/main) - [youtube:globant!](https://www.youtube.com/watch?v=ICsf4yirieA)
+      5. [OpenAI-Langchain-Redis:FinTemplate](https://github.com/langchain-ai/langchain/tree/master/templates/rag-redis)
+      6. [OpenAI-Agents-Finacial](https://medium.com/gitconnected/mastering-openai-assistants-api-building-an-ai-financial-analyst-to-forecast-stock-trend-17a45c77607a), [colab](https://github.com/castillosebastian/genai0/blob/014a9db7fd25ac9d11e12f1bb94659c754341d72/related_works/Cloud_VM/Financial_Statement_Analyst_Using_OpenAIAssistantsAPI_v1.ipynb#L879)
+   
+2. Existing models:
+   1. [GPT-Playground](https://platform.openai.com/playground)
+   2. [LLama2-chat](https://huggingface.co/meta-llama/Llama-2-7b-chat-hf)  
+   3. [FinMA](https://huggingface.co/ChanceFocus/finma-7b-full)
+   4. [FinGPT](https://huggingface.co/FinGPT)
+   5. [Mistral-7b](https://huggingface.co/docs/transformers/main/model_doc/mistral)
+   6. [Mistral-8x7b-SMoe](https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1), [mistral-on-colab](https://github.com/dvmazur/mixtral-offloading/blob/master/notebooks/demo.ipynb), [2](https://huggingface.co/blog/mixtral), [3](https://arxiv.org/abs/2101.03961), [4](https://arxiv.org/pdf/2305.14705.pdf)      
+   7. [finBert](https://huggingface.co/yiyanghkust/finbert-pretrain)
+   8. [FinanceConnect-13b](https://huggingface.co/ceadar-ie/FinanceConnect-13B)
+   9.  [LLM360](https://www.llm360.ai/)
+   10. [Phi-2](https://huggingface.co/microsoft/phi-2)
+   11. ...
+   12. Private Models: [BloombergGPT](https://arxiv.org/abs/2303.17564), interesting info (e.g.Training Chronicles)  
+
+3. Adapt and Align (AA):
+   1. Agregations and Math:
+      1. [LLM-Compiler](https://github.com/SqueezeAILab/LLMCompiler), [llama-api](https://github.com/run-llama/llama-hub/blob/main/llama_hub/llama_packs/agents/llm_compiler/llm_compiler.ipynb)
+   2. AA:Prompt:    
+      1. [MedPrompt](https://arxiv.org/abs/2311.16452)    
+   3. AA:FineTune:   
+      1. [AdaptLLMstoDomains](https://huggingface.co/AdaptLLM/finance-LLM)
+      2. [ft_llama2_LoRA](https://arxiv.org/abs/2308.13032): summarization and NER.
+      3. ...
+      - Datasets:
+        - [FinTalk19k](https://huggingface.co/datasets/ceadar-ie/FinTalk-19k)
+        - [Alpaca](https://huggingface.co/datasets/tatsu-lab/alpaca)
+        - [EDGAR-CORPUS](https://huggingface.co/datasets/eloukas/edgar-corpus)
+        - [FinancialReports_HuggF](https://huggingface.co/datasets/JanosAudran/financial-reports-sec)
+   4. AA: Aling and HF    
+      1. [Pearl](https://pearlagent.github.io/)
+      2. [DPO](https://arxiv.org/pdf/2305.18290.pdf)
+
+4. Evaluation
+   1. [Promptbench](https://promptbench.readthedocs.io/en/latest/examples/basic.html)
+   2. [TrueLens](https://www.trulens.org/), [2](https://blog.llamaindex.ai/build-and-evaluate-llm-apps-with-llamaindex-and-trulens-6749e030d83c)
+   3. [Lanmgchain-Huggingface](https://www.philschmid.de/evaluate-llm), or [Langchain](https://docs.smith.langchain.com/evaluation/evaluator-implementations?ref=blog.langchain.dev#correctness-qa-evaluation), or [Langchain](https://github.com/langchain-ai/langsmith-cookbook/blob/main/testing-examples/qa-correctness/qa-correctness.ipynb)    
+   4. [Promptfoo]([https://github.com/promptfoo/promptfoo/blob/main/README.md)
+5. Benchmarks
+   1. [FinanceBench](https://huggingface.co/datasets/PatronusAI/financebench), [github](https://github.com/patronus-ai/financebench/tree/main), [whitepaper](https://techcommunity.microsoft.com/t5/ai-azure-ai-services-blog/azure-cognitive-search-outperforming-vector-search-with-hybrid/ba-p/3929167)
+   2. [FinQA](https://aclanthology.org/2021.emnlp-main.300/), [github](https://github.com/castillosebastian/FinQA)
+   3. [TAT-QA](https://aclanthology.org/2021.acl-long.254.pdf), [github](https://nextplusplus.github.io/TAT-QA/)
+   4. [ConFIRM](https://arxiv.org/abs/2310.13001), [github](https://github.com/WilliamGazeley/ConFIRM)
+   5. [FLANG-FLUE](https://aclanthology.org/2022.emnlp-main.148.pdf), [huggingface](https://huggingface.co/datasets/SALT-NLP/FLUE-FiQA),
+
+6. Optimize
+   1. [FineTunning_OpeAI](https://platform.openai.com/docs/guides/fine-tuning/fine-tuning-examples)
+
+7. Deploy
+   1. [Azure-AISearch-OpenAI](https://github.com/Azure-Samples/azure-search-openai-demo/blob/main/README.md), for creating dataset see [ConFIRM](https://arxiv.org/abs/2310.13001),[github](https://github.com/WilliamGazeley/ConFIRM)
+
+
+## Scripts Tested
+
+All testing is made in a VM on Google Cloud free tier: 24 vCPU, 84G RAM, 100G Disk, Ubuntu 22. I made an installation [script](https://github.com/castillosebastian/genai0/blob/main/related_works/Cloud_VM/instalar.sh) to run a non-secure IDE. When the installation is finish, to create the Python environment follow:
+
+a. `python3 -m venv ~/.genai0`   
+b. `source  ~/.genai0/bin/activate`   
+c. `python3 -m pip install --upgrade pip`   
+d. `pip install -r requirements.txt`    
+e. Set interpreter in Project settings: Type and select "Python: Select Interpreter." Choose the interpreter from your .genai0 virtual environment. It should be something like /root/.genai0/bin/python3.     
+
+1. Open-Soruce models tested
+   1. [Zphyr-7b_gen_exploration](https://github.com/castillosebastian/genai0/blob/main/related_works/Cloud_VM/rag2_ok_HugFace-zepyyr.py)
+   2. [llama-2-chat-13b-ggml_Q4](https://github.com/castillosebastian/genai0/blob/main/related_works/Cloud_VM/rag3_ok_LLama2-13b_Q4.py)
+   3. [FinMa-7b-full_part1](https://github.com/castillosebastian/genai0/blob/main/related_works/Cloud_VM/rag4_FinMA-7bfull.py)
+   4. [Mistral7b-Q4](https://github.com/castillosebastian/genai0/blob/main/related_works/Cloud_VM/rag5_Mistral7b_Q4.py)
+
+2. Private Model tested:
+   1. [gpt-3.5-turbo-trulens-eval](https://github.com/castillosebastian/genai0/blob/main/related_works/RAG_DeeplearningAI/L1-Advanced_RAG_Pipeline.ipynb)
+
+## Querying Strategies and VectorDB
+1. QS:
+   1. Basics
+   2. Advaced
+      1. SubQuestionQueryEngine for complex questions
+      2. Small-to-big retrieval for improved precision
+      3. Metadata filtering, also for improved precision
+      4. Hybrid search including traditional search engine techniques: [IMPORTATN](https://techcommunity.microsoft.com/t5/ai-azure-ai-services-blog/azure-cognitive-search-outperforming-vector-search-with-hybrid/ba-p/3929167)
+      5. Recursive Retrieval for complex documents: [RecursiveRetriver](https://llamahub.ai/l/llama_packs-dense_x_retrieval?from=llama_packs)
+      6. Text to SQL
+      7. Multi-document agents that can combine all of these techniques
+      8. Ensembles: [EnsembleRetriever](https://python.langchain.com/docs/modules/data_connection/retrievers/ensemble?ref=blog.langchain.dev)
+2. VDB (for performace comparison: [vectorview](https://benchmark.vectorview.ai/vectordbs.html), [ANN-Benchmarks](https://ann-benchmarks.com/index.html))
+   1. [Qdrant](https://qdrant.tech/documentation/), [llamaQdrant](https://docs.llamaindex.ai/en/stable/examples/vector_stores/QdrantIndexDemo.html), [performance_evaluation](https://qdrant.tech/benchmarks/)
+   2. [Azure_AI-Searh_docu](https://learn.microsoft.com/en-us/azure/search/vector-search-filters), [vector-search](https://github.com/Azure/azure-search-vector-samples), [code](https://github.com/Azure/azure-search-vector-samples/tree/main/demo-python)
+3. DB configuration:
+   1. [RAG in Azure AI Search](https://learn.microsoft.com/en-us/azure/search/retrieval-augmented-generation-overview), [video](https://ignite.microsoft.com/en-US/sessions/18618ca9-0e4d-4f9d-9a28-0bc3ef5cf54e?source=sessions)
+
+
+## Api and +
+0. [OpenAI_chat-completion_endpoint](https://platform.openai.com/docs/api-reference/chat/create)
+1. [FMP](https://site.financialmodelingprep.com/developer/docs?ref=mlq.ai#Company-Financial-Statements): financial statements, historical-data, etc
+2. [SecFillingsDownloader](https://github.com/jadchaar/sec-edgar-downloader)
+3. [Polygon](https://polygon.io/stocks?utm_term=polygon%20io&utm_campaign=Brand+-+ALL+(Conv+Value+tROAS)&utm_source=adwords&utm_medium=ppc&hsa_acc=4299129556&hsa_cam=14536485495&hsa_grp=132004734661&hsa_ad=614838466716&hsa_src=g&hsa_tgt=aud-1438727183434:kwd-994300255560&hsa_kw=polygon%20io&hsa_mt=e&hsa_net=adwords&hsa_ver=3&gad_source=1&gclid=CjwKCAiA-P-rBhBEEiwAQEXhH2_6W2Y2rhx8W6-T9v6UseLYYpMfBHCbXw_ayo5-cWpfUCHOoMQFXRoCGVIQAvD_BwE )
+4. [Diffbot-API](https://www.diffbot.com/)
+
+## Semantic Kernel
+1. [Doc](https://learn.microsoft.com/es-mx/semantic-kernel/)
+2. [Glossary](https://github.com/microsoft/semantic-kernel/blob/main/docs/GLOSSARY.md)
+3. [Repo](https://github.com/microsoft/semantic-kernel)
+4. [Repo-Python-Examples](https://github.com/microsoft/semantic-kernel/blob/main/python/README.md), [Examples2](https://github.com/microsoft/semantic-kernel/tree/main/python/samples/kernel-syntax-examples)
+5. [Videos](https://www.youtube.com/playlist?list=PL20mfA9efrmMmLEy1fhFDvB_OmUpNUFqB)
+6. [PLUGINS_SK_&_OpenAI](https://platform.openai.com/docs/plugins/getting-started/) 
+7. [RAG_lite](https://charotamine.medium.com/rag-semantic-kernel-langchain-azure-openai-dc701f5f4d2b)
+
+## Bib and ref
+1. [LLMs_in_finance](https://arxiv.org/abs/2311.10723)
+2. [RAG-Survey](https://arxiv.org/abs/2312.10997v1?utm_source=substack&utm_medium=email)
+3. [FinanceBench](https://huggingface.co/datasets/PatronusAI/financebench), [github](https://github.com/patronus-ai/financebench/tree/main)
+4. AzureVidSeries: [1](https://ignite.microsoft.com/en-US/sessions/24cfc794-f932-4f36-9dbe-d7daa1a1b27c), 
+5. [Azure-AI-Search](https://learn.microsoft.com/en-us/azure/search/vector-search-how-to-query?tabs=query-2023-11-01%2Cfilter-2023-11-01)
+6. [Terrible-RAG-Systems](https://jxnl.github.io/blog/writing/2024/01/07/inverted-thinking-rag/#we-should-not-have-to-build-special-injestion-pipelines)
+7. [semantic-kernell](https://github.com/microsoft/semantic-kernel/blob/main/python/README.md)
+
+## Toy App
+
+![RAGbot_App](image/RAGbot.png)
+
+# Demo APP
+
+1. [Demo APP Azure-AISearch-OpenAI](https://github.com/Azure-Samples/azure-search-openai-demo/blob/main/README.md),[1](https://learn.microsoft.com/en-us/azure/search/retrieval-augmented-generation-overview), [2](https://learn.microsoft.com/en-us/azure/developer/python/get-started-app-chat-template?tabs=github-codespaces),
+
+2. **VectorDB**
+- [document-intelligence-layout](https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-layout?view=doc-intel-4.0.0)
+- [indexes](https://learn.microsoft.com/en-us/azure/search/search-what-is-an-index)
+  
+3. **Retriever**
+
+![search-strategy-comparison](image/Retriever-search-stragegi-comparison.png)
+
+- [hybrid+reranking](https://techcommunity.microsoft.com/t5/ai-azure-ai-services-blog/azure-cognitive-search-outperforming-vector-search-with-hybrid/ba-p/3929167)
+- [vector_search](https://learn.microsoft.com/en-us/azure/search/retrieval-augmented-generation-overview)
+
+1. **Generation**
+- [Langchain-cookbook](https://python.langchain.com/cookbook)
+
+
+
+![Alt text](image/sk.png)
+
+# Logical Design
+1. Ask
+   1. Stepwise-Planner: [file](semantic-kernel/python/notebooks/05-using-the-planner.ipynb)
+      1. Plugins: 
+2. Answer
+
+# Recipes_Examples: 
+- https://github.com/alexchaomander/SK-Recipes/tree/main
+- https://github.com/rajib76/semantic_kernel_examples/tree/main
+
+# Integration
+- SK-Langchain: https://blog.langchain.dev/langchain-expands-collaboration-with-microsoft/

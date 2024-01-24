@@ -5,6 +5,7 @@
 # /home/sebacastillo/genai3/semantic-kernel/python/notebooks/04-context-variables-chat.ipynb
 # /home/sebacastillo/genai3/semantic-kernel/python/notebooks/06-memory-and-embeddings.ipynb
 # /home/sebacastillo/genai3/semantic-kernel/python/semantic_kernel/core_plugins/text_memory_plugin.py
+# https://techcommunity.microsoft.com/t5/educator-developer-blog/teach-chatgpt-to-answer-questions-using-azure-ai-search-amp/ba-p/3985395
 
 
 import asyncio
@@ -33,15 +34,14 @@ def format_hybrid_search_results(hybrid_search_results):
     
 
 sk_prompt = """
-<History>
 {{$chat_history}}
 
-<Documents>
-<{{$docs}}> 
+You are a super intetelligent financial assistant. Using exclusively the information provided in the <related_documents> answer the user question at the end. 
+If you don't know the answer, just say that you don't know, don't try to make up an answer. 
+Keep the answer as concise as possible and add the 'Source' as citation.
 
-You are a helpful financial assitant. 
-Answer the user question based only on the information given in the above documents.
-Add the 'Source' as citation.
+<related_documents>
+{{$docs}}
 
 User:> {{$user_input}}
 ChatBot:>
@@ -103,7 +103,6 @@ async def main() -> None:
     chatting = True
     while chatting:        
         chatting = await chat(context)
-
 
 if __name__ == "__main__":
 

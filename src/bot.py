@@ -34,13 +34,27 @@ class bot:
         self.variables["index_name"] = index_name
         self.variables["kernel"] = self.kernel
         self.variables["chat_history"] = ""
+
+        # ask intent
+        # ask expansion
+        
+
         print("KERNEL")
         print(self.kernel.skills)
+        
+        # Planer should have 
+        # 1. Ask execution_strategy
+        # 2. Memory store access - Scratchpad
+        # 3. Tools
         planner = ActionPlanner(self.kernel)
         plan = await planner.create_plan_async(goal=query)
+        
+        
         context = self.kernel.create_new_context(self.variables)
         result = await plan.invoke_async(query,context)
+        
         self.variables["chat_history"] += f"{USER}: {query}\n{ASSISTANT}: {result.result}\n"
+        
         return result.result
 
     async def ask(self,index_name:str, query: str, chat_history: str) -> str:
