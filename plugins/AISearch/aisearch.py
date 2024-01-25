@@ -1,7 +1,8 @@
+import semantic_kernel as sk
 import asyncio
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
-from azure.search.documents.models import VectorizedQuery, VectorFilterMode
+from azure.search.documents.models import VectorizedQuery
 from langchain_community.embeddings import AzureOpenAIEmbeddings
 from semantic_kernel.sk_pydantic import PydanticField
 from semantic_kernel.orchestration.sk_context import SKContext
@@ -12,19 +13,49 @@ from semantic_kernel.plugin_definition import (
 )
 from semantic_kernel import Kernel,ContextVariables
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
+from semantic_kernel.planning import ActionPlanner
+from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion, AzureTextEmbedding
 
 import os
 from dotenv import load_dotenv
 load_dotenv()
 
-searchazure_ai_search_endpoint = os.getenv("AZURE_AISEARCH_ENDPOINT")
-searchazure_ai_search_api_key = os.getenv("AZURE_AISEARCH_API_KEY")
-searchazure_openai_api_key = os.getenv("AZURE_OPENAI_API_KEY")
-searchazure_openai_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-searchazure_openai_api_version = os.getenv("AZURE_OPENAI_API_VERSION")
-azure_openai_embeddings_model_name = os.getenv("AZURE_OPENAI_EMBEDDINGS_MODEL_NAME")
-index_name=os.getenv("AZURE_AISEARCH_INDEX_NAME")
-credential = AzureKeyCredential(searchazure_ai_search_api_key)
+AZURE_AISEARCH_ENDPOINT = os.getenv("AZURE_AISEARCH_ENDPOINT")
+AZURE_AISEARCH_API_KEY = os.getenv("AZURE_AISEARCH_API_KEY")
+AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION")
+AZURE_OPENAI_EMBEDDINGS_MODEL_NAME = os.getenv("AZURE_OPENAI_EMBEDDINGS_MODEL_NAME")
+AZURE_AISEARCH_INDEX_NAME=os.getenv("AZURE_AISEARCH_INDEX_NAME")
+credential = AzureKeyCredential(AZURE_AISEARCH_API_KEY)
+
+# Creating the kernel
+# api_key, org_id = sk.azure_aisearch_settings_from_dot_env()
+# deployment_name, key, endpoint = sk.azure_openai_settings_from_dot_env()
+# embeddings = os.environ["AZURE_OPENAI_EMBEDDINGS_MODEL_NAME"]
+# azure_chat_service = AzureChatCompletion(deployment_name=deployment_name, endpoint=endpoint, api_key=key)
+# azure_text_embedding = AzureTextEmbedding(deployment_name=embeddings, endpoint=endpoint, api_key=key)
+# kernel = sk.Kernel()
+# kernel.add_chat_service("chat_completion", azure_chat_service)
+# kernel.add_text_embedding_generation_service("ada", azure_text_embedding)
+# # Plugins
+# pluginFC = kernel.import_semantic_plugin_from_directory("plugin", "AISearch")        
+# qrewrite = pluginFC["qrewrite"] 
+
+# def rewrite_ask(ask, qrewrite, history=None):        
+
+#     # Set Context
+#     my_context = kernel.create_new_context()
+#     my_context['query'] = ask
+#     my_context['chat_history'] =  history
+    
+#     # As SK Context
+#     response = await kernel.run_async(qrewrite, input_context=my_context) 
+    
+#     return response
+
+# def summarize_docs():
+#       pass
 
 class AISearch:             
 
@@ -52,19 +83,19 @@ class AISearch:
 
         def generate_embeddings(text):        
                 openai_client = AzureOpenAI(
-                    api_key=searchazure_openai_api_key,
+                    api_key=AZURE_OPENAI_API_KEY,
                     api_version="2023-05-15",
-                    azure_endpoint=searchazure_openai_endpoint
+                    azure_endpoint=AZURE_OPENAI_ENDPOINT
                 )
                 embeddings = AzureOpenAIEmbeddings(
                     azure_deployment="text-embedding-ada-002",
                     openai_api_version="2023-05-15",
-                    chunk_size=10
+                    chunk_size=1000
                 )
 
-                return openai_client.embeddings.create(input=[text], model=azure_openai_embeddings_model_name).data[0].embedding
+                return openai_client.embeddings.create(input=[text], model=AZURE_OPENAI_EMBEDDINGS_MODEL_NAME).data[0].embedding
 
-        search_client = SearchClient(searchazure_ai_search_endpoint, index_name, credential=credential)
+        search_client = SearchClient(AZURE_AISEARCH_ENDPOINT, AZURE_AISEARCH_INDEX_NAME, credential=credential)
                 
         vquery = generate_embeddings(ask)
                
@@ -75,7 +106,7 @@ class AISearch:
             vector_queries=[vector_query],
             select=["Text", "Id","ExternalSourceName","Description","AdditionalMetadata"], 
             top=5
-        )
+        )        
 
         results =  format_hybrid_search_results(results)
         

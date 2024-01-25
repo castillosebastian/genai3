@@ -11,9 +11,10 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 from plugins.AISearch.aisearch import AISearch
 pluginDirectory = "plugins"
+from dotenv import load_dotenv
+load_dotenv()
 
 # Creating the kernel
-api_key, org_id = sk.azure_aisearch_settings_from_dot_env()
 deployment_name, key, endpoint = sk.azure_openai_settings_from_dot_env()
 embeddings = os.environ["AZURE_OPENAI_EMBEDDINGS_MODEL_NAME"]
 
@@ -28,7 +29,7 @@ async def main() -> None:
 
     test_plan = False
     test_chain_plugin = False
-    test_get_query_intent = True
+    test_qrewrite = True
 
     ## Test Simple Plan------------------------------------------------------------------     OK  
     if test_plan:    
@@ -67,17 +68,17 @@ async def main() -> None:
         print(response)       
 
     # Test get query intent-------------------------------------------------------------      OK  
-    if test_get_query_intent:
+    if test_qrewrite:
         #ask = "What is the total Revenue of Microsoft for the years 2023,2022,2021?"
         ask = "Give me a summary of Management's Discussion and Analysis of Best Buy 2019?" # Failed        
         pluginFC = kernel.import_semantic_plugin_from_directory(pluginDirectory, "AISearch")        
-        get_intent = pluginFC["qrewrite"] 
+        qrewrite = pluginFC["qrewrite"] 
         # Set Context
         my_context = kernel.create_new_context()
         my_context['query'] = ask
         my_context['chat_history'] =  ''
         # As SK Context
-        response = await kernel.run_async(get_intent, input_context=my_context) 
+        response = await kernel.run_async(qrewrite, input_context=my_context) 
         print(response['input'])
 
 
