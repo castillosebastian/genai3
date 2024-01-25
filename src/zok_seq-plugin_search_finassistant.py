@@ -11,6 +11,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 from plugins.AISearch.aisearch import AISearch
 pluginDirectory = "plugins"
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -29,7 +30,9 @@ async def main() -> None:
 
     test_plan = False
     test_chain_plugin = False
-    test_qrewrite = True
+    test_rewrite = False
+    test_rewrite_retrive = False # not adding value, the rewriten process is only a parafrase of the original. Is an ambiguos task.
+    test_filter_mode = True
 
     ## Test Simple Plan------------------------------------------------------------------     OK  
     if test_plan:    
@@ -47,8 +50,8 @@ async def main() -> None:
         pluginFC = kernel.import_semantic_plugin_from_directory(pluginDirectory, "FinanceGenerator")        
         consultant_response = pluginFC["OneCompanyQuestion"]        
         # Context Variables
-        ask = "What is the total Revenue of Microsoft for the years 2023,2022,2021?"
-        #ask = "Give me a summary of Management's Discussion and Analysis of Best Buy 2019?" # Failed        
+        #ask = "What is the total Revenue of Microsoft for the years 2023,2022,2021?"
+        ask = "Give me a summary of Management's Discussion and Analysis of Best Buy 2019?" # Failed        
         # Retrieve
         #documents = str(await kernel.run_async(search_function, input_str=ask))  # str critically important! No, my mistake, I was not using the class api        
         documents = await kernel.run_async(search_function, input_str=ask)  # str critically important!                
@@ -68,20 +71,93 @@ async def main() -> None:
         print(response)       
 
     # Test get query intent-------------------------------------------------------------      OK  
-    if test_qrewrite:
+    if test_rewrite:
         #ask = "What is the total Revenue of Microsoft for the years 2023,2022,2021?"
-        ask = "Give me a summary of Management's Discussion and Analysis of Best Buy 2019?" # Failed        
-        pluginFC = kernel.import_semantic_plugin_from_directory(pluginDirectory, "AISearch")        
-        qrewrite = pluginFC["qrewrite"] 
+        ask = "Give me a summary of MD&A of Best Buy 2019?" # Failed        
+        pluginFC = kernel.import_semantic_plugin_from_directory(pluginDirectory, "ASKTranformation")        
+        rewrite = pluginFC["rewrite"] 
         # Set Context
         my_context = kernel.create_new_context()
-        my_context['query'] = ask
+        my_context['ask'] = ask
         my_context['chat_history'] =  ''
         # As SK Context
-        response = await kernel.run_async(qrewrite, input_context=my_context) 
+        response = await kernel.run_async(rewrite, input_context=my_context) 
         print(response['input'])
 
+    # Test get query intent-------------------------------------------------------------      OK  : not so usefull for one iteration only
+    if test_rewrite_retrive:
+        #ask = "What is the total Revenue of Microsoft for the years 2023,2022,2021?"
+        #ask = "Is Best Buy trying to enrich the lives of consumers through technology?" # Failed        
+        #ask = "Give a summary overview of Best Buy challenges"
+        #ask = "In agreement with the information outlined in the income statement, what is the FY2015 - FY2017 3 year average net profit margin (as a %) for Best Buy? Answer in units of percents and round to one decimal place."
+        # ask= """
+        # What is the year end FY2019 total amount of inventories for Best Buy? Answer in USD millions. 
+        # Base your judgments on the information provided primarily in the balance sheet.
+        # """
+        ask="Is growth in JnJ's adjusted EPS expected to accelerate in FY2023?"
+        
+        pluginAIS = kernel.import_plugin(plugin_instance= AISearch(), plugin_name= "AISearch")
+        search = pluginAIS['search']
+        pluginFC = kernel.import_semantic_plugin_from_directory(pluginDirectory, "FinanceGenerator")        
+        consultant_response = pluginFC["OneCompanyQuestion"]        
+        pluginASKT = kernel.import_semantic_plugin_from_directory(pluginDirectory, "ASKTranformation")        
+        rewrite = pluginASKT["rewrite"] 
 
+        # Set Context
+        my_context = kernel.create_new_context()
+        my_context['ask'] = ask
+        my_context['chat_history'] =  ''
+        
+        # Rewrite
+        response = await kernel.run_async(rewrite, input_context=my_context) 
+        new_ask = response['input']
+        print(new_ask)
+
+        # Search
+        documents = await kernel.run_async(search, input_str=new_ask)       
+        print(documents)
+
+        # As Context
+        context = kernel.create_new_context()
+        context['input'] = new_ask
+        context['context'] =  documents['input']
+        
+        # Generate
+        response = await kernel.run_async(consultant_response, input_context=context)           
+        
+        print(response)       
+
+     # Test chain plugin---------------------------------------------------------------      OK    
+    
+    # Test filter mode
+    if test_filter_mode:
+        # Plugins
+        pluginAIS = kernel.import_plugin(plugin_instance= AISearch(), plugin_name= "AISearch")
+        search = pluginAIS['search']
+        pluginFC = kernel.import_semantic_plugin_from_directory(pluginDirectory, "FinanceGenerator")        
+        consultant_response = pluginFC["OneCompanyQuestion"]        
+        # Context Variables
+        #ask = "What is the total Revenue of Microsoft for the years 2023,2022,2021?"
+        ask = "Give me a summary of Management's Discussion and Analysis of Best Buy 2019?" # Failed        
+        # Retrieve
+        #documents = str(await kernel.run_async(search_function, input_str=ask))  # str critically important! No, my mistake, I was not using the class api        
+        documents = await kernel.run_async(search, input_str=ask)  # str critically important!                
+
+        # As context vars
+        # my_context = sk.ContextVariables()
+        # my_context["input"] = ask
+        # my_context["context"] = documents
+        # As Context
+        my_context = kernel.create_new_context()
+        my_context['input'] = ask
+        my_context['context'] =  documents['input']
+        # As SK Context
+        response = await kernel.run_async(consultant_response, input_context=my_context)           
+        # As SK Variables
+        #response = await kernel.run_async(consultant_response, input_vars=my_context)       
+        print(response)       
+
+    
 
 
 if __name__ == "__main__":   
