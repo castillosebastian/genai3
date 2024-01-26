@@ -63,7 +63,9 @@ async def main() -> None:
     # Test get query intent-------------------------------------------------------------      OK  
     if test_filter_mode_basic:
         
-        ask = "Give me a summary of MD&A of BestBuy 2019?" # Failed
+        #ask = "Give me a summary of MD&A of Pfizer 2019?" # Failed
+        #ask = "Waht elements are mentioned in the MD&A of Pfizer 2019?" # Failed
+        ask = "What elements are mentioned in the MD&A of BestBuy 2019?" # Failed
         #ask = "What is the total Revenue of Microsoft for the years 2023,2022,2021?"
         #ask = "Is Best Buy trying to enrich the lives of consumers through technology?" # Failed        
         #ask = "Give a summary overview of Best Buy challenges"
