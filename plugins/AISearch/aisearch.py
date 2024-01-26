@@ -107,11 +107,7 @@ class AISearchWF:
     async def searchwf(self, context: SKContext) -> str:
 
         try:
-
-        
-        
-            # company = context.variables.get("company")
-            # ask = context.variables.get("ask")
+            
             company = str(context['company'])
             ask = str(context['ask'])
 
