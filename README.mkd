@@ -110,9 +110,9 @@ e. Set interpreter in Project settings: Type and select "Python: Select Interpre
    1. [gpt-3.5-turbo-trulens-eval](https://github.com/castillosebastian/genai0/blob/main/related_works/RAG_DeeplearningAI/L1-Advanced_RAG_Pipeline.ipynb)
 
 ## Querying Strategies and VectorDB
-1. QS:
-   1. Basics
-   2. Advaced
+1. QS:   
+   2. Basics
+   3. Advaced
       1. SubQuestionQueryEngine for complex questions
       2. Small-to-big retrieval for improved precision
       3. Metadata filtering, also for improved precision

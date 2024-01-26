@@ -31,8 +31,8 @@ async def main() -> None:
     test_plan = False
     test_chain_plugin = False
     test_rewrite = False
-    test_rewrite_retrive = False # not adding value, the rewriten process is only a parafrase of the original. Is an ambiguos task.
-    test_filter_mode = True
+    test_rewrite_retrive = True # Very important
+    test_filter_mode = False
 
     ## Test Simple Plan------------------------------------------------------------------     OK  
     if test_plan:    
@@ -74,7 +74,7 @@ async def main() -> None:
     if test_rewrite:
         #ask = "What is the total Revenue of Microsoft for the years 2023,2022,2021?"
         ask = "Give me a summary of MD&A of Best Buy 2019?" # Failed        
-        pluginFC = kernel.import_semantic_plugin_from_directory(pluginDirectory, "ASKTranformation")        
+        pluginFC = kernel.import_semantic_plugin_from_directory(pluginDirectory, "ASKProcess")        
         rewrite = pluginFC["rewrite"] 
         # Set Context
         my_context = kernel.create_new_context()
@@ -84,7 +84,7 @@ async def main() -> None:
         response = await kernel.run_async(rewrite, input_context=my_context) 
         print(response['input'])
 
-    # Test get query intent-------------------------------------------------------------      OK  : not so usefull for one iteration only
+    # Test get query intent-------------------------------------------------------------      OK  
     if test_rewrite_retrive:
         #ask = "What is the total Revenue of Microsoft for the years 2023,2022,2021?"
         #ask = "Is Best Buy trying to enrich the lives of consumers through technology?" # Failed        
@@ -93,25 +93,43 @@ async def main() -> None:
         # ask= """
         # What is the year end FY2019 total amount of inventories for Best Buy? Answer in USD millions. 
         # Base your judgments on the information provided primarily in the balance sheet.
-        # """
-        ask="Is growth in JnJ's adjusted EPS expected to accelerate in FY2023?"
+        # """        
+        chat_history = """
+        User: Hi Assistant, can you tell me if the growth in Johnson & Johnson's adjusted EPS is expected to accelerate in FY2023? \n
+        Assistant: Certainly! Analysts are forecasting a potential acceleration in Johnson & Johnson's adjusted EPS for FY2023. This is based on their strong product pipeline and strategic investments in pharmaceuticals and medical devices.\n
+        User: What are the main factors that could drive this acceleration?\n
+        Assistant: The main factors include increased sales from their pharmaceutical segment, particularly from new and existing drugs. Additionally, the company's focus on high-margin products and cost-cutting measures are likely to contribute.\n
+        User: Are there any recent product launches that could significantly impact their earnings?\n
+        Assistant: Yes, Johnson & Johnson has had several successful product launches recently, especially in their pharmaceutical division. These new drugs, treating a range of conditions, are expected to boost revenue growth in FY2023.\n
+        User: How does the company's diversification across healthcare sectors affect its earnings stability?\n
+        Assistant: Johnson & Johnson's diversification across pharmaceuticals, medical devices, and consumer health products provides a balanced portfolio that can mitigate risks and ensure more stable earnings. This diversity helps them navigate market fluctuations more effectively.\n
+        User: Has the company made any recent acquisitions or partnerships that could influence its growth?\n
+        Assistant: Indeed, Johnson & Johnson has been actively pursuing strategic acquisitions and partnerships, particularly in the pharmaceutical sector, to expand its product offerings and fuel growth. These moves could positively impact their growth trajectory in FY2023.\n
+        User: What are the potential risks that could hinder this expected EPS growth?\n
+        Assistant: The risks include potential regulatory challenges, competition from generic and biosimilar products, and global economic uncertainties that could affect healthcare spending. These factors could impact their revenue and, consequently, their EPS growth.\n
+        User: Finally, what's the general consensus among analysts regarding JnJ's growth prospects for FY2023?\n
+        Assistant: Most analysts hold a positive outlook for Johnson & Johnson's growth in FY2023, citing their strong pipeline, strategic initiatives, and robust market presence. However, it's important to stay updated as market conditions can change.\n
+        """
+        ask="Is growth in the company adjusted EPS expected to accelerate in that period?" # use indirec reference
+        #ask="What can you tell me about it MD&A in that period?" # use indirec reference
         
         pluginAIS = kernel.import_plugin(plugin_instance= AISearch(), plugin_name= "AISearch")
         search = pluginAIS['search']
         pluginFC = kernel.import_semantic_plugin_from_directory(pluginDirectory, "FinanceGenerator")        
         consultant_response = pluginFC["OneCompanyQuestion"]        
-        pluginASKT = kernel.import_semantic_plugin_from_directory(pluginDirectory, "ASKTranformation")        
+        pluginASKT = kernel.import_semantic_plugin_from_directory(pluginDirectory, "ASKProcess")        
         rewrite = pluginASKT["rewrite"] 
 
         # Set Context
         my_context = kernel.create_new_context()
         my_context['ask'] = ask
-        my_context['chat_history'] =  ''
+        my_context['chat_history'] =  chat_history
         
         # Rewrite
         response = await kernel.run_async(rewrite, input_context=my_context) 
         new_ask = response['input']
-        print(new_ask)
+        print(f'ask:{ask}')
+        print(f'new ask:{new_ask}')
 
         # Search
         documents = await kernel.run_async(search, input_str=new_ask)       
@@ -126,39 +144,7 @@ async def main() -> None:
         response = await kernel.run_async(consultant_response, input_context=context)           
         
         print(response)       
-
-     # Test chain plugin---------------------------------------------------------------      OK    
     
-    # Test filter mode
-    if test_filter_mode:
-        # Plugins
-        pluginAIS = kernel.import_plugin(plugin_instance= AISearch(), plugin_name= "AISearch")
-        search = pluginAIS['search']
-        pluginFC = kernel.import_semantic_plugin_from_directory(pluginDirectory, "FinanceGenerator")        
-        consultant_response = pluginFC["OneCompanyQuestion"]        
-        # Context Variables
-        #ask = "What is the total Revenue of Microsoft for the years 2023,2022,2021?"
-        ask = "Give me a summary of Management's Discussion and Analysis of Best Buy 2019?" # Failed        
-        # Retrieve
-        #documents = str(await kernel.run_async(search_function, input_str=ask))  # str critically important! No, my mistake, I was not using the class api        
-        documents = await kernel.run_async(search, input_str=ask)  # str critically important!                
-
-        # As context vars
-        # my_context = sk.ContextVariables()
-        # my_context["input"] = ask
-        # my_context["context"] = documents
-        # As Context
-        my_context = kernel.create_new_context()
-        my_context['input'] = ask
-        my_context['context'] =  documents['input']
-        # As SK Context
-        response = await kernel.run_async(consultant_response, input_context=my_context)           
-        # As SK Variables
-        #response = await kernel.run_async(consultant_response, input_vars=my_context)       
-        print(response)       
-
-    
-
 
 if __name__ == "__main__":   
     asyncio.run(main())
