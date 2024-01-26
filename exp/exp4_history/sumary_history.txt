@@ -1,0 +1,50 @@
+
+1) Prompt Template:
+
+"""
+Given the following conversation between User and Assistant: 
+
+###
+{chat_history}
+### 
+
+Craft a concise synopsis of each exchange, explicitly including facts, entities, events, and user preferences. 
+Maintain the original dialogue's format by denoting the user's contributions with 'User:' and the virtual assistant's replies with 'Assistant:'.
+"""
+
+2) Single Test
+
+Chat history example:
+
+User: I’ve heard about adobo sauce in Mexican cuisine. Can you tell me more about it? 
+Assistant: Adobo sauce is a dark red sauce made from ground chiles, herbs, and vinegar. It’s used as a marinade and cooking sauce in Mexican and Southwestern cuisines. 
+User: What are the main ingredients in adobo sauce? 
+Assistant: The main ingredients are typically chile peppers, garlic, and vinegar. However, there can be variations in the recipe. 
+User: How can I make adobo sauce at home? 
+Assistant: One way to make adobo sauce at home is by using smoked jalapeno peppers called chipotles. You can stew the chipotles in a sauce with tomatoes, garlic, vinegar, salt, and spices. It’s also possible to find canned adobo sauce in the Hispanic foods section of many grocery stores. 
+User: Are there any other uses for adobo sauce? 
+Assistant: Adobo sauce can be used as a condiment or as a marinade for various dishes. It enhances the flavor of meats and can be used as a cooking and serving sauce. Additionally, adobo is also used in a stew-like presentation of meat prepared in this sauce. 
+User: Is adobo sauce easy to preserve? 
+Assistant: Yes, you can preserve adobo sauce by freezing or canning it when you’re done making it. This allows you to store it for up to a year and enjoy its flavors whenever you want.
+
+Palabras: 228
+
+
+Sumary:
+
+User: Queries about adobo sauce in Mexican cuisine.
+Assistant: Describes adobo sauce as a dark red sauce made from chiles, herbs, and vinegar, used in Mexican and Southwestern cuisines.
+
+User: Asks for the main ingredients in adobo sauce.
+Assistant: Lists the main ingredients as chile peppers, garlic, and vinegar, noting recipe variations.
+
+User: Inquires about making adobo sauce at home.
+Assistant: Suggests using smoked jalapeno peppers (chipotles) and stewing them with tomatoes, garlic, vinegar, salt, and spices. Mentions the availability of canned adobo sauce in grocery stores.
+
+User: Questions other uses for adobo sauce.
+Assistant: Explains that adobo sauce can be used as a condiment, marinade, cooking, and serving sauce, and in stews.
+
+User: Asks if adobo sauce is easy to preserve.
+Assistant: Confirms the ease of preserving adobo sauce through freezing or canning, extending its shelf life up to a year.
+
+Palabras 142
