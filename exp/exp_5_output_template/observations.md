@@ -63,10 +63,7 @@ Our study aimed to explore the potential of fine-tuning to help GPT-4 learn new 
 The results from Table 22 demonstrate that GPT-4 learned just 47% of this new knowledge and with fine-tuning we were able to get this number way higher to 72% and 74% with RAG and the fine-tuned model. Interestingly, this can be defined as the upper bound of what the model could have learned.
 
 
-
-
-
-## Question per Use Case
+## Question per Use Case (pending)
 
 **U3**
 - How many competitor to Analyze? 38x?
