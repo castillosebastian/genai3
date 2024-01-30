@@ -65,7 +65,7 @@ async def main() -> None:
         
         #ask = "Give me a summary of MD&A of Pfizer 2019?" # Failed
         #ask = "Waht elements are mentioned in the MD&A of Pfizer 2019?" # Failed
-        ask = "What elements are mentioned in the MD&A of BestBuy 2019?" # Failed
+        ask = "What elements are mentioned in the MD&A of BestBuy and Microsoft 2019?" # Failed
         #ask = "What is the total Revenue of Microsoft for the years 2023,2022,2021?"
         #ask = "Is Best Buy trying to enrich the lives of consumers through technology?" # Failed        
         #ask = "Give a summary overview of Best Buy challenges"
@@ -95,11 +95,13 @@ async def main() -> None:
         response = await kernel.run(extract_entities, input_context=my_context)         
         ask_entities = string_to_json(response['input'])
         
+        print(ask_entities)
 
-        company_name = ask_entities['company_name'][0]
-        country = ask_entities['country'][0]
-        start_date = ask_entities['dates'][0]
-        end_date = ask_entities['dates'][1]  
+        # Tune for many companies
+        # company_name = ask_entities['company_name'][0]
+        # country = ask_entities['country'][0]
+        # start_date = ask_entities['dates'][0]
+        # end_date = ask_entities['dates'][1]  
 
 
         stop = False

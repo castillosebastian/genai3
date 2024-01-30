@@ -5,8 +5,8 @@ from azure.search.documents import SearchClient
 from azure.search.documents.models import VectorizedQuery, VectorFilterMode
 from langchain_community.embeddings import AzureOpenAIEmbeddings
 from openai import AzureOpenAI
-from semantic_kernel.plugin_definition import sk_function, sk_function_context_parameter
-from semantic_kernel import SKContext
+from semantic_kernel.plugin_definition import kernel_function, kernel_function_context_parameter
+from semantic_kernel import KernelContext
 from semantic_kernel import Kernel, ContextVariables
 from semantic_kernel.planning import ActionPlanner
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion, AzureTextEmbedding
@@ -25,7 +25,7 @@ credential = AzureKeyCredential(os.getenv("AZURE_AISEARCH_API_KEY"))
 
 
 class AISearch:
-    @sk_function(
+    @kernel_function(
         description="This function search for finance information stored in knowledge data base",
         name="search",
         input_description="A user query related to factual data or insight from financial documents",
@@ -97,14 +97,14 @@ class AISearch:
 
 class AISearchWF:
 
-    @sk_function(
+    @kernel_function(
         description="This function search for finance information stored in knowledge data base",
         name="searchwf",
         #input_description="A user query related to factual data or insight from financial documents",
     )
-    @sk_function_context_parameter(name="ask",description="Ask from the user")
-    @sk_function_context_parameter(name="company",description="The company data to look for")
-    async def searchwf(self, context: SKContext) -> str:
+    @kernel_function_context_parameter(name="ask",description="Ask from the user")
+    @kernel_function_context_parameter(name="company",description="The company data to look for")
+    async def searchwf(self, context: KernelContext) -> str:
 
         try:
             

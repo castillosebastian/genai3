@@ -1,13 +1,13 @@
 You are a helpful, pattern-following assistant.
-Given this conversation between User and Assistant:
+Given this conversation between User and Assistant delimited by triple backticks:
 
 ```
 {{$chat_history}}
 ```
 
-Rewrite the following User's question to make it as complete and precise as possible following this patterns:
+Rewrite the next User's question to make it as complete and precise as possible following these patterns:
 -Modify the pronouns or common nouns to refer back to proper nouns in previous conversation. 
--Return only the rewritten query and do not add any additional context.
+-Return only the rewritten question with no additional context in a JSON object with "rew_question" as the key. 
 
 User's Question: ```{{$ask}}```
-Rewrited Question:
+Assistant rewritten question:
