@@ -1,6 +1,4 @@
-# SaT GENERATIVE AI TASKFORCE
-### Sell and Separate Prompts
-### 23-Jan-24
+### 23-Jan-24 Document
 
 ## 1. Desired Output per Use Case
 
@@ -60,7 +58,7 @@
 ## Question per Use Case
 
 **U3**
-- How many competitor to Analyze? 
-- Extract information per Competitor?
+- How many competitor to Analyze? 38x?
+- Extract information per Competitor? 
 - Extract news per Competitor and Topic?
   
