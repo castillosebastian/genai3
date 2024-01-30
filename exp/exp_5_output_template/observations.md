@@ -51,8 +51,19 @@
 
 ## Implications for AI operations and tools in the context of RAG pattern system.  
 
-1. Knowledge-Generation: based on knowledge base of factual data (static or dinamic) generate useful information that address some question or business problems.
-2. Knowledge-Discovery: prediction and projections, some forms of (quantitative and qualitative) knowledge insights, are specific AI tasks that require well stablish machine learning strategies.
+Knowledge Generation: The GPT model is effective in generating knowledge based on its extensive database, which includes information up to its last training. It can address questions and solve business problems by providing useful information based on previously learned data and knowledge, this can include explanations of concepts, summaries of standard practices, and guidance based on established knowledge. RAG architecture extend those capabilities by provide GPT models with updated information. 
+
+Knowledge Discovery: In terms of prediction and projection, as well as qualitative and quantitative knowledge generation, the GPT model is not designed to perform specific financial prediction tasks nor to create customized predictive models. Although it can generate projections based on historical patterns and established theories, these should not be considered as precise or reliable financial analyses. The model does not implement specific machine learning strategies for financial prediction and cannot adjust to specific or real-time dynamic data. Therefore, for tasks requiring advanced predictive analysis, it is recommended to use specialized models and tools in the financial field.
+
+**Related Article:**
+
+5.4 Knowledge Discovery (from [RAG vs Fine-tuning: Pipelines, Tradeoffs, and a Case Study on Agriculture](https://arxiv.org/abs/2401.08406), Microsoft, 2024 )
+Our study aimed to explore the potential of fine-tuning to help GPT-4 learn new knowledge, which is crucial for applied research. To test this, we selected questions across the 50 states in the US that were similar across at least three states. We then computed the cosine similarity from the embeddings and identified a list of 1000 such questions. These questions were removed from the training set, and we used both fine-tuning and fine-tuning with RAG to assess whether GPT-4 could learn new knowledge based on similarities across different states. The results from our study, as shown in Table 22, were quite promising. The data revealed that GPT-4 was only able to learn 47% of the new knowledge presented to it. However, with the help of fine-tuning, we were able to significantly increase this percentage. Specifically, the fine-tuned model was able to learn up to 72% and 74% of the new knowledge, depending on whether we used RAG or not. This upper bound represents the maximum amount of new knowledge that the model could have learned, given the data it was presented with. It is worth noting that the potential applications of this research are numerous. For instance, consider a scenario where we need to evaluate the impact of a particular pest or disease on corn. In some cases, we may not have access to advisory information specific to our region. However, we may have access to advisory information from a similar region, which could still be useful. By leveraging fine-tuning and RAG, we can help the model learn this new knowledge and apply it to our specific situation.
+
+The results from Table 22 demonstrate that GPT-4 learned just 47% of this new knowledge and with fine-tuning we were able to get this number way higher to 72% and 74% with RAG and the fine-tuned model. Interestingly, this can be defined as the upper bound of what the model could have learned.
+
+
+
 
 
 ## Question per Use Case
