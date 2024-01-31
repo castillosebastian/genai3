@@ -34,36 +34,50 @@ azure_chat_service = AzureChatCompletion(deployment_name=deployment_name, endpoi
 azure_text_embedding = AzureTextEmbedding(deployment_name=embeddings, endpoint=endpoint, api_key=key)
 
           
-async def query(ask = None):
+async def query(ask=None):
+    """
+    This function takes an ask from the user related to one or many companies 
+    and performs for each company a hybrid-search with filter in Azure AI search Index.
+    """
+    try:
+        kernel = sk.Kernel()
+        kernel.add_chat_service("chat_completion", azure_chat_service)
+        kernel.add_text_embedding_generation_service("ada", azure_text_embedding)
 
-    kernel = sk.Kernel()
-    kernel.add_chat_service("chat_completion", azure_chat_service)
-    kernel.add_text_embedding_generation_service("ada", azure_text_embedding)
-    
-    pluginASKT = kernel.import_semantic_plugin_from_directory("plugins", "ASKProcess")        
-    extract_entities = pluginASKT["extractEntities"]
-    pluginAIS = kernel.import_plugin(plugin_instance= AISearchWF(), plugin_name= "AISearchWF")
-    searchwf =  pluginAIS["searchwf"]                                 
-   
-    my_context = kernel.create_new_context()
-    my_context['ask'] = ask
+        pluginASKT = kernel.import_semantic_plugin_from_directory("plugins", "ASKProcess")        
+        extract_entities = pluginASKT["extractEntities"]
+        pluginAIS = kernel.import_plugin(plugin_instance= AISearchWF(), plugin_name= "AISearchWF")
+        searchwf =  pluginAIS["searchwf"]                                 
 
-    response = await kernel.run(extract_entities, input_context=my_context)         
-    ask_entities = string_to_json(response['input'])            
-    metadata_filter = build_query_filter(ask_entities)    
+        my_context = kernel.create_new_context()
+        my_context['ask'] = ask
 
-    documents = []
+        try:
+            response = await kernel.run(extract_entities, input_context=my_context)         
+        except Exception as e:
+            # Handle exceptions from extract_entities
+            print(f"Error in extract_entities: {e}")
+            return []
 
-    if len(metadata_filter)==1:
-        context_variables = sk.ContextVariables(variables={"ask":ask,"filter": metadata_filter[0]})
-        # Retrieve document with Hybrid Search with Filters
-        doc = await kernel.run(searchwf, input_vars=context_variables) 
-        documents.append(doc)            
-    else:        
+        ask_entities = string_to_json(response['input'])            
+        metadata_filter = build_query_filter(ask_entities)    
+
+        documents = []
+
         for i in metadata_filter:
             context_variables = sk.ContextVariables(variables={"ask":ask,"filter": i})
-            # Retrieve document with Hybrid Search with Filters
-            doc = await kernel.run(searchwf, input_vars=context_variables) 
-            documents.append(doc)    
+            try:
+                # Retrieve document with Hybrid Search with Filters
+                doc = await kernel.run(searchwf, input_vars=context_variables) 
+                documents.append(doc)    
+            except Exception as e:
+                # Handle exceptions from searchwf
+                print(f"Error in searchwf with filter {i}: {e}")
+                # Optionally continue to the next filter or return/exit
 
-    return documents
+        return documents
+
+    except Exception as e:
+        # Main function level error handling
+        print(f"Unexpected error in query function: {e}")
+        return []
