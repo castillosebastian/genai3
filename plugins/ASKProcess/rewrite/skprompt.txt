@@ -5,9 +5,12 @@ Given this conversation between User and Assistant delimited by triple backticks
 {{$chat_history}}
 ```
 
-Rewrite the next User's question to make it as complete and precise as possible following these patterns:
+Rewrite the next User's question to make it as clear, complete and precise as possible, following these rules:
 -Modify the pronouns or common nouns to refer back to proper nouns in previous conversation. 
--Return only the rewritten question with no additional context in a JSON object with "rew_question" as the key. 
 
-User's Question: ```{{$ask}}```
+Return only the rewritten question with no additional context in a JSON object with "rew_question" as key. 
+
+User's Question: 
+```{{$ask}}```
+
 Assistant rewritten question:

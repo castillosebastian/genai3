@@ -10,7 +10,7 @@ from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion, AzureText
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
-from plugins.AISearch.aisearch import AISearchWF
+from plugins.AISearch.aisearch import AISearchWF, build_query_filter
 pluginDirectory = "plugins"
 
 from dotenv import load_dotenv
@@ -63,19 +63,11 @@ async def main() -> None:
     # Test get query intent-------------------------------------------------------------      OK  
     if test_filter_mode_basic:
         
-        #ask = "Give me a summary of MD&A of Pfizer 2019?" # Failed
-        #ask = "Waht elements are mentioned in the MD&A of Pfizer 2019?" # Failed
-        ask = "What elements are mentioned in the MD&A of BestBuy and Microsoft 2019?" # Failed
-        #ask = "What is the total Revenue of Microsoft for the years 2023,2022,2021?"
-        #ask = "Is Best Buy trying to enrich the lives of consumers through technology?" # Failed        
-        #ask = "Give a summary overview of Best Buy challenges"
-        #ask = "In agreement with the information outlined in the income statement, what is the FY2015 - FY2017 3 year average net profit margin (as a %) for Best Buy? Answer in units of percents and round to one decimal place."
-        #ask= """
-        #What is the year end FY2019 total amount of inventories for Best Buy? Answer in USD millions. 
-        #Base your judgments on the information provided primarily in the balance sheet.
-        #"""        
-        #ask="Is growth in the company adjusted EPS expected to accelerate in that period?" # use indirec reference
-        #chat_history = ""
+        # Single Company Query
+        #ask = "What is the revenue of Microsoft?" # OK
+        #ask = "What is the revenue of Microsoft in 2019" # OK
+        # Multiple Componies Query
+        ask = "What elements are mentioned in the MD&A of BestBuy and Microsoft?" # Failed
                 
         pluginAIS = kernel.import_plugin(plugin_instance= AISearchWF(), plugin_name= "AISearchWF")
         searchwf =  pluginAIS["searchwf"]    
@@ -89,46 +81,38 @@ async def main() -> None:
         my_context['ask'] = ask
                 
         # Rewrite
-        print(ask)
+        print(f'original_question: {ask}')
         
         
         response = await kernel.run(extract_entities, input_context=my_context)         
-        ask_entities = string_to_json(response['input'])
-        
-        print(ask_entities)
+        ask_entities = string_to_json(response['input'])        
+        print(f'extracted_entities: {ask_entities}')
+        metadata_filter = build_query_filter(ask_entities)
+        print(f'builded filter: {metadata_filter}')
+              
 
-        # Tune for many companies
-        # company_name = ask_entities['company_name'][0]
-        # country = ask_entities['country'][0]
-        # start_date = ask_entities['dates'][0]
-        # end_date = ask_entities['dates'][1]  
-
-
-        stop = False
-        if stop:             
-            field_name = "company_name"
-            field_value = get_json_field(response['input'], field_name)[0].upper()
-            print(field_value)          
-                    
-            context_variables = sk.ContextVariables(variables={"ask":ask,"company": field_value})
-            # print(type(ask))
-            # print(type(field_value))
-            # print(type(context_variables))        
-            # context_variables['ask'] = ask
-            # context_variables['company'] = field_value
-
+        if len(metadata_filter)==1:
+            context_variables = sk.ContextVariables(variables={"ask":ask,"filter": metadata_filter[0]})
             # Retrieve document with Hybrid Search with Filters
             documents = await kernel.run(searchwf, input_vars=context_variables) 
             print(documents)
+        else:
+            for i in metadata_filter:
+                context_variables = sk.ContextVariables(variables={"ask":ask,"filter": i})
+                # Retrieve document with Hybrid Search with Filters
+                documents = await kernel.run(searchwf, input_vars=context_variables) 
+                print('Retrieved document:\n')
+                print(documents)
+                print('-'*100)        
+        
+        # # As Context
+        # context = kernel.create_new_context()
+        # context['input'] = ask
+        # context['context'] =  documents['input']
             
-            # As Context
-            context = kernel.create_new_context()
-            context['input'] = ask
-            context['context'] =  documents['input']
-            
-            # Generate
-            response = await kernel.run(consultant_response, input_context=context)           
-            print(response)           
+        #     # Generate
+        # response = await kernel.run(consultant_response, input_context=context)           
+        # print(response)           
 
 if __name__ == "__main__":   
     asyncio.run(main())

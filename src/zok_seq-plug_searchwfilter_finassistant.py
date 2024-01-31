@@ -10,7 +10,7 @@ from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion, AzureText
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
-from plugins.AISearch.aisearch import AISearchWF
+from plugins.AISearch.aisearch import AISearchWF, build_query_filter
 pluginDirectory = "plugins"
 
 from dotenv import load_dotenv
@@ -65,6 +65,7 @@ async def main() -> None:
         
         #ask = "Give me a summary of MD&A of Pfizer 2019?" # Failed
         #ask = "Waht elements are mentioned in the MD&A of Pfizer 2019?" # Failed
+        #ask = "What elements are mentioned in the MD&A of US BestBuy 2019?" # Failed
         ask = "What elements are mentioned in the MD&A of BestBuy 2019?" # Failed
         #ask = "What is the total Revenue of Microsoft for the years 2023,2022,2021?"
         #ask = "Is Best Buy trying to enrich the lives of consumers through technology?" # Failed        
@@ -92,33 +93,28 @@ async def main() -> None:
         print(ask)
         
         
-        response = await kernel.run(extract_entities, input_context=my_context)         
-        ask_entities = string_to_json(response['input'])
+        response = await kernel.run(extract_entities, input_context=my_context) 
+        print(response)        
+        ask_entities = string_to_json(response['input'])        
+        print(ask_entities)  
+              
+        field_name = "company_name"
+        field_value = get_json_field(response['input'], field_name)[0].upper()
+        print(field_value)          
+                
+        context_variables = sk.ContextVariables(variables={"ask":ask,"company": field_value})
+        # print(type(ask))
+        # print(type(field_value))
+        # print(type(context_variables))        
+        # context_variables['ask'] = ask
+        # context_variables['company'] = field_value
+
+        # Retrieve document with Hybrid Search with Filters
+        documents = await kernel.run(searchwf, input_vars=context_variables) 
+        print(documents)
         
-
-        company_name = ask_entities['company_name'][0]
-        country = ask_entities['country'][0]
-        start_date = ask_entities['dates'][0]
-        end_date = ask_entities['dates'][1]  
-
-
         stop = False
-        if stop:             
-            field_name = "company_name"
-            field_value = get_json_field(response['input'], field_name)[0].upper()
-            print(field_value)          
-                    
-            context_variables = sk.ContextVariables(variables={"ask":ask,"company": field_value})
-            # print(type(ask))
-            # print(type(field_value))
-            # print(type(context_variables))        
-            # context_variables['ask'] = ask
-            # context_variables['company'] = field_value
-
-            # Retrieve document with Hybrid Search with Filters
-            documents = await kernel.run(searchwf, input_vars=context_variables) 
-            print(documents)
-            
+        if stop:          
             # As Context
             context = kernel.create_new_context()
             context['input'] = ask

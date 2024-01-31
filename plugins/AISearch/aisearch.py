@@ -31,68 +31,120 @@ class AISearch:
         input_description="A user query related to factual data or insight from financial documents",
     )
     async def search(self, ask: str) -> str:
-        def format_hybrid_search_results(hybrid_search_results):
-            formatted_results = [
-                f"""ID: {result['Id']}
-                    Text: {result['Text']}
-                    ExternalSourceName: {result['ExternalSourceName']}
-                    Source: {result['Description']}
-                    AdditionalMetadata: {result['AdditionalMetadata']}
-                    """
-                for result in hybrid_search_results
-            ]
-            formatted_string = ""
-            for i, doc in enumerate(formatted_results):
-                # formatted_string += f"\n<document {i+1}>\n\n {doc}\n"
-                formatted_string += f'\n""" {doc}\n"""\n\n'
-            return formatted_string
+        try:
+            def format_hybrid_search_results(hybrid_search_results):
+                formatted_results = [
+                    f"""ID: {result['Id']}
+                        Text: {result['Text']}
+                        ExternalSourceName: {result['ExternalSourceName']}
+                        Source: {result['Description']}
+                        AdditionalMetadata: {result['AdditionalMetadata']}
+                        """
+                    for result in hybrid_search_results
+                ]
+                formatted_string = ""
+                for i, doc in enumerate(formatted_results):
+                    # formatted_string += f"\n<document {i+1}>\n\n {doc}\n"
+                    formatted_string += f'\n""" {doc}\n"""\n\n'
+                return formatted_string
 
-        def generate_embeddings(text):
-            openai_client = AzureOpenAI(
-                api_key=AZURE_OPENAI_API_KEY,
-                api_version=AZURE_OPENAI_API_VERSION,
-                azure_endpoint=AZURE_OPENAI_ENDPOINT,
-            )
-            embeddings = AzureOpenAIEmbeddings(
-                azure_deployment="text-embedding-ada-002",
-                openai_api_version=AZURE_OPENAI_API_VERSION,
-                chunk_size=1000,
-            )
-
-            return (
-                openai_client.embeddings.create(
-                    input=[text], model=AZURE_OPENAI_EMBEDDINGS_MODEL_NAME
+            def generate_embeddings(text):
+                openai_client = AzureOpenAI(
+                    api_key=AZURE_OPENAI_API_KEY,
+                    api_version=AZURE_OPENAI_API_VERSION,
+                    azure_endpoint=AZURE_OPENAI_ENDPOINT,
                 )
-                .data[0]
-                .embedding
+                embeddings = AzureOpenAIEmbeddings(
+                    azure_deployment="text-embedding-ada-002",
+                    openai_api_version=AZURE_OPENAI_API_VERSION,
+                    chunk_size=1000,
+                )
+
+                return (
+                    openai_client.embeddings.create(
+                        input=[text], model=AZURE_OPENAI_EMBEDDINGS_MODEL_NAME
+                    )
+                    .data[0]
+                    .embedding
+                )
+
+            search_client = SearchClient(
+                AZURE_AISEARCH_ENDPOINT, AZURE_AISEARCH_INDEX_NAME, credential=credential
             )
 
-        search_client = SearchClient(
-            AZURE_AISEARCH_ENDPOINT, AZURE_AISEARCH_INDEX_NAME, credential=credential
-        )
+            vquery = generate_embeddings(ask)
 
-        vquery = generate_embeddings(ask)
+            vector_query = VectorizedQuery(
+                vector=vquery, k_nearest_neighbors=5, fields="Embedding"
+            )
 
-        vector_query = VectorizedQuery(
-            vector=vquery, k_nearest_neighbors=5, fields="Embedding"
-        )
+            results = search_client.search(
+                search_text=ask,
+                vector_queries=[vector_query],           
+                select=[
+                    "Text",
+                    "Id",
+                    "ExternalSourceName",
+                    "Description",
+                    "AdditionalMetadata",
+                ],
+                top=4,
+            )
 
-        results = search_client.search(
-            search_text=ask,
-            vector_queries=[vector_query],           
-            select=[
-                "Text",
-                "Id",
-                "ExternalSourceName",
-                "Description",
-                "AdditionalMetadata",
-            ],
-            top=4,
-        )
+            results = format_hybrid_search_results(results)
 
-        results = format_hybrid_search_results(results)
+            return "No documents found" if results == '' else results
+        
+        except ValueError as e:
+            print(f"Error: {e}")            
+            raise e
 
-        return str(results)
+def build_query_filter(json_object):
+    try:
+        # Initialize a list to hold filter strings
+        filters = []
+
+        # Convert company names to uppercase, or use [None] if company_name is None
+        companies = [company.upper() for company in json_object['company_name']] if json_object.get('company_name') is not None else [None]
+
+        # Check and prepare country and dates outside the loop
+        country = json_object['country'][0] if json_object.get('country') else None
+        year = json_object['dates'][0][:4] if json_object.get('dates') else None
+
+        # Loop through each company
+        for company in companies:
+            # Initialize components of the filter for this company
+            filter_components = []
+
+            # Add company filter if company exists
+            if company:
+                filter_components.append(f"Description eq '{company}'")
+
+            # Add country filter if country exists
+            if country:
+                filter_components.append(f"Country eq '{country}'")
+
+            # Add date filter if dates exist
+            if year:
+                filter_components.append(f"AdditionalMetadata eq '{year}'")
+
+            # Check if any filter component was added for this company/criteria
+            if filter_components:
+                # Join all components with 'and'
+                filter_query = " and ".join(filter_components)
+                filters.append(filter_query)
+
+        # Check if any filter was created
+        if not filters:
+            return False
+
+        return filters
+
+    except Exception as e:
+        # Handle any exception that occurs during processing
+        return [f"Error building query filter: {e}"]
+
+
 
 
 class AISearchWF:
@@ -103,12 +155,12 @@ class AISearchWF:
         #input_description="A user query related to factual data or insight from financial documents",
     )
     @kernel_function_context_parameter(name="ask",description="Ask from the user")
-    @kernel_function_context_parameter(name="company",description="The company data to look for")
+    @kernel_function_context_parameter(name="filter",description="The filter to apply for the search")
     async def searchwf(self, context: KernelContext) -> str:
 
         try:
             
-            company = str(context['company'])
+            metadata_filter = str(context['filter'])
             ask = str(context['ask'])
 
 
@@ -162,7 +214,7 @@ class AISearchWF:
                 search_text=ask,
                 vector_queries=[vector_query],
                 vector_filter_mode=VectorFilterMode.PRE_FILTER,
-                filter=f"Description eq '{company}'",
+                filter=metadata_filter,                
                 select=[
                     "Text",
                     "Id",
@@ -174,8 +226,10 @@ class AISearchWF:
             )
 
             results = format_hybrid_search_results(results)
+            
+            return "No documents found" if results == '' else results
 
-            return str(results)
+        
         except ValueError as e:
             print(f"Error: {e}")            
             raise e
