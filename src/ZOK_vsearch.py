@@ -31,7 +31,8 @@ async def main() -> None:
 
     if single_question:
         # Test single question-------------------------------------------------------
-        ask = "What is the revenue of Microsoft?" # Test simple OK
+        #ask = "What is the revenue of Microsoft?" # Test simple OK
+        ask = "What is the revenue of Pfizer?" # Test simple OK
         #ask = "What is the revenue?" # Test execution with filter == None OK
         #ask = "In agreement with the information outlined in the income statement, what is average net profit margin (as a %) for Best Buy?"
 
@@ -44,50 +45,18 @@ async def main() -> None:
         pluginAIS = kernel.import_plugin(plugin_instance= VSearch(), plugin_name= "VSearch")
         vsearch =  pluginAIS["retrieve_documents"]
 
-        my_context = kernel.create_new_context()
-        my_context['ask'] = ask
+        context = kernel.create_new_context()
+        context['ask'] = ask
         #response = await kernel.run(extract_entities, input_context=my_context)         
         #print(response['input'])
         #ask_entities = vsearch.retrieve_documents(response['input'])            
                
-        response = vsearch(my_context)
+        response = vsearch(context)
         print(response)
 
         
     
-    if question_set:
-        # Test question-set-----------------------------------------------------------
-        # Define test cases
-        results_list = []
-
-        test_cases = [
-        "What is the Revenue of Microsoft?",
-        "In agreement with the information outlined in the income statement, what is average net profit margin (as a %) for Best Buy?",
-        "What is the total amount of inventories for Best Buy? Answer in USD millions. Base your judgments on the information provided primarily in the balance sheet.",
-        "Is growth in JnJ's adjusted EPS expected to accelerate?",
-        "How did JnJ's sales growth compare to international sales growth?",
-        "Has Microsoft increased its debt on balance sheet?",
-        "How much does Pfizer expect to pay to spin off Upjohn in the future in USD million?",
-        "For Pfizer, which geographic region had the biggest drop in year over year revenues?",
-        "Is Pfizer spinning off any large business segments?"
-        ]
-
-        for ask in test_cases:
-            print(f"\nQuery: {ask}")
-            documents = await query(ask)
-        
-            # Create a dictionary for each question and its result
-            result_dict = {
-                'question': ask,
-                'documents': documents[0]['input']
-            }
-
-            # Append the dictionary to the results list
-            results_list.append(result_dict)
-
-        # Write the results to a JSON file
-        with open('query_results.json', 'w', encoding='utf-8') as f:
-            json.dump(results_list, f, ensure_ascii=False, indent=4)
+    
 
 if __name__ == "__main__":   
     asyncio.run(main())

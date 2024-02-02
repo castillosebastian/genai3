@@ -133,14 +133,10 @@ class VSearch:
         description="This function search finance information from public filings of any company.",
         name="retrieve_documents",
         #input_description="A user query related to factual data or insight from financial documents",
-    )
-    #@kernel_function_context_parameter(name="ask",description="Ask from the user")    
-    async def retrieve_documents(self, context: KernelContext) -> str:
-    #async def retrieve_documents(self, ask: str) -> str:
+    )    
+    async def retrieve_documents(self, context: KernelContext) -> str:    
 
-        try:
-            
-            ask = context['input']['ask']     
+        try:               
 
             azure_chat_service = AzureChatCompletion(
                 deployment_name=AZURE_OPENAI_DEPLOYMENT_NAME,
@@ -158,7 +154,7 @@ class VSearch:
             extract_entities = pluginASKT["extractEntities"]            
             
             my_context = kernel.create_new_context()
-            my_context['ask'] = ask
+            my_context['ask'] = context['input']['ask'] 
 
             response = await kernel.run(extract_entities, input_context=my_context)                 
 
@@ -171,7 +167,7 @@ class VSearch:
                 AZURE_AISEARCH_ENDPOINT, AZURE_AISEARCH_INDEX_NAME, credential=credential
             )
 
-            vquery = await self.generate_embeddings(ask)
+            vquery = await self.generate_embeddings(context['input']['ask'] )
 
             vector_query = VectorizedQuery(
                 vector=vquery, k_nearest_neighbors=5, fields="Embedding"
@@ -179,7 +175,7 @@ class VSearch:
             
             if metadata_filter:
                 results = search_client.search(
-                    search_text=ask,
+                    search_text=context['input']['ask'],
                     vector_queries=[vector_query],
                     vector_filter_mode=VectorFilterMode.PRE_FILTER,
                     filter=metadata_filter,                
@@ -194,7 +190,7 @@ class VSearch:
                 )
             else:
                 results = search_client.search(
-                    search_text=ask,
+                    search_text=context['input']['ask'],
                     vector_queries=[vector_query],           
                     select=[
                         "Text",
