@@ -59,10 +59,14 @@ async def query(ask=None):
             print(f"Error in extract_entities: {e}")
             return []
 
+        # if filter is none do not filter!
+
         ask_entities = string_to_json(response['input'])            
         metadata_filter = build_query_filter(ask_entities)    
 
         documents = []
+
+        # if metadata filter is none do not use filter
 
         for i in metadata_filter:
             context_variables = sk.ContextVariables(variables={"ask":ask,"filter": i})

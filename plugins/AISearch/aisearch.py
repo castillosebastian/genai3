@@ -136,7 +136,7 @@ def build_query_filter(json_object):
 
         # Check if any filter was created
         if not filters:
-            return False
+            return None
 
         return filters
 
@@ -210,6 +210,8 @@ class AISearchWF:
                 vector=vquery, k_nearest_neighbors=5, fields="Embedding"
             )
 
+            # if metadata filter is none do not use filter!!!!!!!!!!
+            
             results = search_client.search(
                 search_text=ask,
                 vector_queries=[vector_query],

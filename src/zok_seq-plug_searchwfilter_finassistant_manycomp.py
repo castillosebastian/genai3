@@ -67,7 +67,7 @@ async def main() -> None:
         #ask = "What is the revenue of Microsoft?" # OK
         #ask = "What is the revenue of Microsoft in 2019" # OK
         # Multiple Componies Query
-        ask = "What elements are mentioned in the MD&A of BestBuy and Microsoft?" # Failed
+        ask = "In agreement with the information outlined in the income statement, what is average net profit margin (as a %) for Best Buy?" # Failed
                 
         pluginAIS = kernel.import_plugin(plugin_instance= AISearchWF(), plugin_name= "AISearchWF")
         searchwf =  pluginAIS["searchwf"]    

@@ -75,14 +75,40 @@ The results from Table 22 demonstrate that GPT-4 learned just 47% of this new kn
 - 2. Comprehensive_List of business processes, roles, and organizational departments 
 - 3. Knowledge_Extraction_plus_Analysis_Report
 
-## Question per Use Case (pending)
+
+# Templates
+
+- **IFRS technical resources**: 
+    IFRS technical resources has all the technical guidance, latest thinking and tools from EY financial reporting professionals.[resources](https://www.ey.com/en_gl/ifrs-technical-resources)
 
 
-**U2**
-- Data from Diffbot relates to news.
+1.  **Detailed_Report**:
+    [EY](https://assets.ey.com/content/dam/ey-sites/ey-com/en_au/pdfs/effective-reporting-march15.pdf)
 
-**U3**
-- How many competitor to Analyze? 38x?
-- Extract information per Competitor? 
-- Extract news per Competitor and Topic?
-  
+2.  **Footnote**:
+    [Drafting an S-1 - IPOHub](https://www.ipohub.org/article/drafting-s-1)
+    [Eventbrite](https://www.investopedia.com/terms/s/sec-form-s-1.asp)
+    When preparing the footnotes for your DivestCo S-1, it’s essential to ensure clarity, accuracy, and compliance with relevant regulations. Here are some steps and considerations:
+    Understand the Purpose of Footnotes:
+    Footnotes in financial statements serve several purposes:
+    Explanatory Notes: They provide additional context, explanations, and details related to specific line items in the financial statements.
+    Disclosure of Accounting Policies: Footnotes explain the accounting policies followed by the company.
+    Contingencies and Risks: Footnotes disclose contingent liabilities, legal disputes, and other risks.
+    Significant Transactions: Any significant transactions or events that impact financial statements should be disclosed.
+    Subsequent Events: Footnotes address events occurring after the balance sheet date but before the financial statements’ issuance.
+    Structure of Footnotes:
+    Organize footnotes numerically or alphabetically.
+    Each footnote should have a unique identifier (e.g., “Note 1,” “Note A,” etc.).
+    Start with a brief description of the topic covered by the footnote.
+    *Common Footnote Topics:*
+        Accounting Policies: Explain the company’s accounting policies (e.g., revenue recognition, depreciation, etc.).
+        Contingent Liabilities: Disclose potential obligations (e.g., pending lawsuits, warranties).
+        Related Party Transactions: Detail transactions with related parties (e.g., affiliates, key management personnel).
+        Leases: Provide information on lease agreements.
+        Subsequent Events: Address events occurring after the balance sheet date.
+        Segment Reporting: If applicable, disclose information about business segments.
+        Fair Value Measurements: Explain how fair values are determined.
+        Earnings Per Share (EPS): Disclose EPS calculations.
+        Income Taxes: Detail income tax provisions and deferred taxes.
+        Significant Accounting Estimates: Discuss estimates (e.g., bad debt provision, useful lives of assets)
+3.  [pro-forma-financial-statement](https://www.bench.co/blog/accounting/pro-forma-financial-statements)

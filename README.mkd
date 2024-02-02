@@ -57,7 +57,9 @@ In this context, we divided the content of our notes and testing following the G
    1. Agregations and Math:
       1. [LLM-Compiler](https://github.com/SqueezeAILab/LLMCompiler), [llama-api](https://github.com/run-llama/llama-hub/blob/main/llama_hub/llama_packs/agents/llm_compiler/llm_compiler.ipynb)
    2. AA:Prompt:    
-      1. [MedPrompt](https://arxiv.org/abs/2311.16452)    
+      1. [MedPrompt](https://arxiv.org/abs/2311.16452)
+      2. [PROMT_GUIDE](https://www.promptingguide.ai/)
+      3. [OPENAI_PROMPT_GUIDE]    
    3. AA:FineTune:   
       1. [AdaptLLMstoDomains](https://huggingface.co/AdaptLLM/finance-LLM)
       2. [ft_llama2_LoRA](https://arxiv.org/abs/2308.13032): summarization and NER.
