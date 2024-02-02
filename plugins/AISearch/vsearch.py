@@ -6,11 +6,17 @@ from azure.search.documents import SearchClient
 from azure.search.documents.models import VectorizedQuery, VectorFilterMode
 from langchain_community.embeddings import AzureOpenAIEmbeddings
 from openai import AzureOpenAI
-from semantic_kernel.plugin_definition import kernel_function, kernel_function_context_parameter
+from semantic_kernel.plugin_definition import (
+    kernel_function,
+    kernel_function_context_parameter,
+)
 from semantic_kernel import KernelContext
 from semantic_kernel import Kernel, ContextVariables
 from semantic_kernel.planning import ActionPlanner
-from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion, AzureTextEmbedding
+from semantic_kernel.connectors.ai.open_ai import (
+    AzureChatCompletion,
+    AzureTextEmbedding,
+)
 import os
 from dotenv import load_dotenv
 
@@ -26,22 +32,26 @@ AZURE_AISEARCH_INDEX_NAME = os.getenv("AZURE_AISEARCH_INDEX_NAME")
 credential = AzureKeyCredential(os.getenv("AZURE_AISEARCH_API_KEY"))
 embeddings = os.environ["AZURE_OPENAI_EMBEDDINGS_MODEL_NAME"]
 
-class VSearch:
 
+class VSearch:
     def build_query_filter(self, json_object) -> str:
         """
-        Convert Json object with extracted entities en query filter for AI Search Index.        
+        Convert Json object with extracted entities en query filter for AI Search Index.
         """
         try:
             # Initialize a list to hold filter strings
             filters = []
 
             # Convert company names to uppercase, or use [None] if company_name is None
-            companies = [company.upper() for company in json_object['company_name']] if json_object.get('company_name') is not None else [None]
+            companies = (
+                [company.upper() for company in json_object["company_name"]]
+                if json_object.get("company_name") is not None
+                else [None]
+            )
 
             # Check and prepare country and dates outside the loop
-            country = json_object['country'][0] if json_object.get('country') else None
-            year = json_object['dates'][0][:4] if json_object.get('dates') else None
+            country = json_object["country"][0] if json_object.get("country") else None
+            year = json_object["dates"][0][:4] if json_object.get("dates") else None
 
             # Loop through each company
             for company in companies:
@@ -76,12 +86,11 @@ class VSearch:
             # Handle any exception that occurs during processing
             return [f"Error building query filter: {e}"]
 
-
     async def format_hybrid_search_results(self, hybrid_search_results) -> str:
         """
         Turn multiple document retrieved from AIS Index into single document.
-        """ 
-        try:                                      
+        """
+        try:
             formatted_results = [
                 f"""ID: {result['Id']}
                     Text: {result['Text']}
@@ -132,53 +141,58 @@ class VSearch:
     @kernel_function(
         description="This function search finance information from public filings of any company.",
         name="retrieve_documents",
-        #input_description="A user query related to factual data or insight from financial documents",
-    )    
-    async def retrieve_documents(self, context: KernelContext) -> str:    
-
-        try:               
-
+        # input_description="A user query related to factual data or insight from financial documents",
+    )
+    async def retrieve_documents(self, context: KernelContext) -> str:
+        try:
             azure_chat_service = AzureChatCompletion(
                 deployment_name=AZURE_OPENAI_DEPLOYMENT_NAME,
                 endpoint=AZURE_OPENAI_ENDPOINT,
-                api_key=AZURE_OPENAI_API_KEY)
+                api_key=AZURE_OPENAI_API_KEY,
+            )
             azure_text_embedding = AzureTextEmbedding(
-                deployment_name=embeddings, 
-                endpoint=AZURE_OPENAI_ENDPOINT, 
-                api_key=AZURE_OPENAI_API_KEY)
+                deployment_name=embeddings,
+                endpoint=AZURE_OPENAI_ENDPOINT,
+                api_key=AZURE_OPENAI_API_KEY,
+            )
 
             kernel = sk.Kernel()
             kernel.add_chat_service("chat_completion", azure_chat_service)
             kernel.add_text_embedding_generation_service("ada", azure_text_embedding)
-            pluginASKT = kernel.import_semantic_plugin_from_directory("plugins", "ASKProcess")        
-            extract_entities = pluginASKT["extractEntities"]            
-            
+            pluginASKT = kernel.import_semantic_plugin_from_directory(
+                "plugins", "ASKProcess"
+            )
+            extract_entities = pluginASKT["extractEntities"]
+
             my_context = kernel.create_new_context()
-            my_context['ask'] = context['input']['ask'] 
+            my_context["ask"] = context["input"]["ask"]
 
-            response = await kernel.run(extract_entities, input_context=my_context)                 
+            response = await kernel.run(extract_entities, input_context=my_context)
+            #response = extract_entities.invoke(context["input"]["ask"])
 
-            ask_entities = self.string_to_json(response['input'])            
+            ask_entities = self.string_to_json(response["input"])
 
             metadata_filter = self.build_query_filter(ask_entities)
-            metadata_filter = metadata_filter[0] if metadata_filter else metadata_filter   
-           
+            metadata_filter = metadata_filter[0] if metadata_filter else metadata_filter
+
             search_client = SearchClient(
-                AZURE_AISEARCH_ENDPOINT, AZURE_AISEARCH_INDEX_NAME, credential=credential
+                AZURE_AISEARCH_ENDPOINT,
+                AZURE_AISEARCH_INDEX_NAME,
+                credential=credential,
             )
 
-            vquery = await self.generate_embeddings(context['input']['ask'] )
+            vquery = await self.generate_embeddings(context["input"]["ask"])
 
             vector_query = VectorizedQuery(
                 vector=vquery, k_nearest_neighbors=5, fields="Embedding"
             )
-            
+
             if metadata_filter:
                 results = search_client.search(
-                    search_text=context['input']['ask'],
+                    search_text=context["input"]["ask"],
                     vector_queries=[vector_query],
                     vector_filter_mode=VectorFilterMode.PRE_FILTER,
-                    filter=metadata_filter,                
+                    filter=metadata_filter,
                     select=[
                         "Text",
                         "Id",
@@ -190,8 +204,8 @@ class VSearch:
                 )
             else:
                 results = search_client.search(
-                    search_text=context['input']['ask'],
-                    vector_queries=[vector_query],           
+                    search_text=context["input"]["ask"],
+                    vector_queries=[vector_query],
                     select=[
                         "Text",
                         "Id",
@@ -200,12 +214,12 @@ class VSearch:
                         "AdditionalMetadata",
                     ],
                     top=4,
-                )            
+                )
 
             results = await self.format_hybrid_search_results(results)
-            
-            return "No documents found" if results == '' else results
-        
+
+            return "No documents found" if results == "" else results
+
         except ValueError as e:
-            print(f"Error: {e}")            
+            print(f"Error: {e}")
             raise e
