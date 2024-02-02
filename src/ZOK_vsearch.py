@@ -52,11 +52,9 @@ async def main() -> None:
         #print(response['input'])
         #ask_entities = vsearch.retrieve_documents(response['input'])            
                
-        response = vsearch(context)
-        print(response)
+        doc = vsearch(context)
 
-        
-    
+        print(doc['input'])       
     
 
 if __name__ == "__main__":   

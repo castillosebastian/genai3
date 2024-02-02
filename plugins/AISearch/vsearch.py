@@ -137,6 +137,9 @@ class VSearch:
         except json.JSONDecodeError as e:
             # Handle the exception if the string is not a valid JSON
             return f"Error converting string to JSON: {e}"
+    
+    def result_to_string(self, result):
+        return '\n'.join(f"{key}: {value}" for key, value in result.items())
 
     @kernel_function(
         description="This function search finance information from public filings of any company.",
@@ -172,8 +175,9 @@ class VSearch:
 
             ask_entities = self.string_to_json(response["input"])
 
-            metadata_filter = self.build_query_filter(ask_entities)
-            metadata_filter = metadata_filter[0] if metadata_filter else metadata_filter
+            metadata_filters = self.build_query_filter(ask_entities)
+
+            #metadata_filter = metadata_filter[0] if metadata_filter else metadata_filter
 
             search_client = SearchClient(
                 AZURE_AISEARCH_ENDPOINT,
@@ -187,21 +191,39 @@ class VSearch:
                 vector=vquery, k_nearest_neighbors=5, fields="Embedding"
             )
 
-            if metadata_filter:
-                results = search_client.search(
-                    search_text=context["input"]["ask"],
-                    vector_queries=[vector_query],
-                    vector_filter_mode=VectorFilterMode.PRE_FILTER,
-                    filter=metadata_filter,
-                    select=[
-                        "Text",
-                        "Id",
-                        "ExternalSourceName",
-                        "Description",
-                        "AdditionalMetadata",
-                    ],
-                    top=4,
-                )
+            # this list only aply if metada filter 
+            documents = []
+
+            if metadata_filters:
+
+                for filter in metadata_filters:
+
+                    results = search_client.search(
+                        search_text=context["input"]["ask"],
+                        vector_queries=[vector_query],
+                        vector_filter_mode=VectorFilterMode.PRE_FILTER,
+                        filter=filter,
+                        select=[
+                            "Text",
+                            "Id",
+                            "ExternalSourceName",
+                            "Description",
+                            "AdditionalMetadata",
+                        ],
+                        top=4,
+                    )                   
+
+                    # for result in results:
+                    #     result['filter'] = filter
+                    #     documents.append(result)
+
+                    retrieved_info = [dict(result) for result in results]  # Convert results to list of dicts
+                    documents.append({
+                        'filter': filter,
+                        'retrieved_info': retrieved_info
+                    })    
+                        
+
             else:
                 results = search_client.search(
                     search_text=context["input"]["ask"],
@@ -215,10 +237,18 @@ class VSearch:
                     ],
                     top=4,
                 )
+            
+            # Process each 'retrieved_info' in the documents
+            processed_texts = []
+            for document in documents:
+                # Join all data in 'retrieved_info' into a single text
+                joined_text = '\n\n'.join(self.result_to_string(result) for result in document['retrieved_info'])
+                processed_texts.append(joined_text)
 
-            results = await self.format_hybrid_search_results(results)
-
-            return "No documents found" if results == "" else results
+            # Join all processed texts into one document with the specified format
+            final_document = '\n\n```\n' + '\n\n```\n\n```\n'.join(processed_texts) + '\n```'                          
+            
+            return final_document
 
         except ValueError as e:
             print(f"Error: {e}")
