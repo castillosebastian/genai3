@@ -31,9 +31,9 @@ async def main() -> None:
 
     if single_question:
         # Test single question-------------------------------------------------------
-        ask = "What is the revenue of Microsoft?" # Test simple OK
+        #ask = "What is the revenue of Microsoft?" # Test simple OK
         #ask = "What is the revenue of Pfizer?" # Test simple OK
-        ask = "What is the revenue of Microsoft and Pfizer?" # Test simple OK
+        #ask = "What is the revenue of Pfizer, BestBuy and Microsoft?" # Test simple OK
         #ask = "What is the revenue?" # Test execution with filter == None OK
         #ask = "In agreement with the information outlined in the income statement, what is average net profit margin (as a %) for Best Buy?"
 
@@ -47,10 +47,7 @@ async def main() -> None:
         vsearch =  pluginAIS["retrieve_documents"]
 
         context = kernel.create_new_context()
-        context['ask'] = ask
-        #response = await kernel.run(extract_entities, input_context=my_context)         
-        #print(response['input'])
-        #ask_entities = vsearch.retrieve_documents(response['input'])            
+        context['ask'] = ask                
                
         doc = vsearch(context)
 
