@@ -1,6 +1,7 @@
 import json
 import semantic_kernel as sk
 import asyncio
+from typing import List, Optional
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
 from azure.search.documents.models import VectorizedQuery, VectorFilterMode
@@ -38,6 +39,30 @@ class VSearch:
     """
     
     """
+    def __init__(self):
+        """
+        Initialize the VSearch class with required clients and configurations.
+        """
+        self.openai_client = AzureOpenAI(
+            api_key=AZURE_OPENAI_API_KEY,
+            api_version=AZURE_OPENAI_API_VERSION,
+            azure_endpoint=AZURE_OPENAI_ENDPOINT,
+        )
+        self.embeddings = AzureOpenAIEmbeddings(
+            azure_deployment="text-embedding-ada-002",
+            openai_api_version=AZURE_OPENAI_API_VERSION,
+            chunk_size=1000,
+        )
+        self.azure_chat_service = AzureChatCompletion(
+                deployment_name=AZURE_OPENAI_DEPLOYMENT_NAME,
+                endpoint=AZURE_OPENAI_ENDPOINT,
+                api_key=AZURE_OPENAI_API_KEY,
+            )
+        self.azure_text_embedding = AzureTextEmbedding(
+                deployment_name=embeddings,
+                endpoint=AZURE_OPENAI_ENDPOINT,
+                api_key=AZURE_OPENAI_API_KEY,
+        )
     
     def build_query_filter(self, json_object) -> str:
         """
@@ -46,47 +71,37 @@ class VSearch:
         try:
             # Initialize a list to hold filter strings
             filters = []
-
             # Convert company names to uppercase, or use [None] if company_name is None
             companies = (
                 [company.upper() for company in json_object["company_name"]]
                 if json_object.get("company_name") is not None
                 else [None]
             )
-
             # Check and prepare country and dates outside the loop
             country = json_object["country"][0] if json_object.get("country") else None
             year = json_object["dates"][0][:4] if json_object.get("dates") else None
-
             # Loop through each company
             for company in companies:
                 # Initialize components of the filter for this company
                 filter_components = []
-
                 # Add company filter if company exists
                 if company:
                     filter_components.append(f"Description eq '{company}'")
-
                 # Add country filter if country exists
                 if country:
                     filter_components.append(f"Country eq '{country}'")
-
                 # Add date filter if dates exist
                 if year:
                     filter_components.append(f"AdditionalMetadata eq '{year}'")
-
                 # Check if any filter component was added for this company/criteria
                 if filter_components:
                     # Join all components with 'and'
                     filter_query = " and ".join(filter_components)
                     filters.append(filter_query)
-
             # Check if any filter was created
             if not filters:
                 return None
-
             return filters
-
         except Exception as e:
             # Handle any exception that occurs during processing
             return [f"Error building query filter: {e}"]
@@ -114,25 +129,22 @@ class VSearch:
             # Handle any exception that occurs during processing
             return [f"Error formatting retrieved documents: {e}"]
 
-    async def generate_embeddings(self, text):
-        openai_client = AzureOpenAI(
-            api_key=AZURE_OPENAI_API_KEY,
-            api_version=AZURE_OPENAI_API_VERSION,
-            azure_endpoint=AZURE_OPENAI_ENDPOINT,
-        )
-        embeddings = AzureOpenAIEmbeddings(
-            azure_deployment="text-embedding-ada-002",
-            openai_api_version=AZURE_OPENAI_API_VERSION,
-            chunk_size=1000,
-        )
-
-        return (
-            openai_client.embeddings.create(
+    async def generate_embeddings(self, text: str) -> Optional[List[float]]:
+        """
+        Generates embeddings for the given text using Azure OpenAI.
+        Parameters:
+        text (str): The text for which to generate embeddings.
+        Returns:
+        Optional[List[float]]: A list of floats representing the embedding, or None if an error occurs.
+        """
+        try:
+            response = self.openai_client.embeddings.create(
                 input=[text], model=AZURE_OPENAI_EMBEDDINGS_MODEL_NAME
             )
-            .data[0]
-            .embedding
-        )
+            return response.data[0].embedding
+        except Exception as e:
+            print(f"Error generating embeddings: {e}")
+            return None
 
     def string_to_json(self, string):
         try:
@@ -152,21 +164,11 @@ class VSearch:
         # input_description="A user query related to factual data or insight from financial documents",
     )
     async def retrieve_documents(self, context: KernelContext) -> str:
-        try:
-            azure_chat_service = AzureChatCompletion(
-                deployment_name=AZURE_OPENAI_DEPLOYMENT_NAME,
-                endpoint=AZURE_OPENAI_ENDPOINT,
-                api_key=AZURE_OPENAI_API_KEY,
-            )
-            azure_text_embedding = AzureTextEmbedding(
-                deployment_name=embeddings,
-                endpoint=AZURE_OPENAI_ENDPOINT,
-                api_key=AZURE_OPENAI_API_KEY,
-            )
+        try:           
 
             kernel = sk.Kernel()
-            kernel.add_chat_service("chat_completion", azure_chat_service)
-            kernel.add_text_embedding_generation_service("ada", azure_text_embedding)
+            kernel.add_chat_service("chat_completion", self.azure_chat_service)
+            kernel.add_text_embedding_generation_service("ada", self.azure_text_embedding)
             pluginASKT = kernel.import_semantic_plugin_from_directory(
                 "plugins", "ASKProcess"
             )
@@ -236,6 +238,8 @@ class VSearch:
                     ],
                     top=4,
                 )
+                retrieved_info = [dict(result) for result in results]
+                documents.append({"filter": None, "retrieved_info": retrieved_info})
 
             # Process each 'retrieved_info' in the documents
             processed_texts = []
