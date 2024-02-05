@@ -22,6 +22,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 AZURE_AISEARCH_ENDPOINT = os.getenv("AZURE_AISEARCH_ENDPOINT")
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
@@ -34,6 +35,10 @@ embeddings = os.environ["AZURE_OPENAI_EMBEDDINGS_MODEL_NAME"]
 
 
 class VSearch:
+    """
+    
+    """
+    
     def build_query_filter(self, json_object) -> str:
         """
         Convert Json object with extracted entities en query filter for AI Search Index.
@@ -137,9 +142,9 @@ class VSearch:
         except json.JSONDecodeError as e:
             # Handle the exception if the string is not a valid JSON
             return f"Error converting string to JSON: {e}"
-    
+
     def result_to_string(self, result):
-        return '\n'.join(f"{key}: {value}" for key, value in result.items())
+        return "\n".join(f"{key}: {value}" for key, value in result.items())
 
     @kernel_function(
         description="This function search finance information from public filings of any company.",
@@ -171,13 +176,13 @@ class VSearch:
             my_context["ask"] = context["input"]["ask"]
 
             response = await kernel.run(extract_entities, input_context=my_context)
-            #response = extract_entities.invoke(context["input"]["ask"])
+            # response = extract_entities.invoke(context["input"]["ask"])
 
             ask_entities = self.string_to_json(response["input"])
 
             metadata_filters = self.build_query_filter(ask_entities)
 
-            #metadata_filter = metadata_filter[0] if metadata_filter else metadata_filter
+            # metadata_filter = metadata_filter[0] if metadata_filter else metadata_filter
 
             search_client = SearchClient(
                 AZURE_AISEARCH_ENDPOINT,
@@ -191,13 +196,11 @@ class VSearch:
                 vector=vquery, k_nearest_neighbors=5, fields="Embedding"
             )
 
-            # this list only aply if metada filter 
+            # this list only aply if metada filter
             documents = []
 
             if metadata_filters:
-
                 for filter in metadata_filters:
-
                     results = search_client.search(
                         search_text=context["input"]["ask"],
                         vector_queries=[vector_query],
@@ -211,18 +214,14 @@ class VSearch:
                             "AdditionalMetadata",
                         ],
                         top=4,
-                    )                   
+                    )
 
-                    # for result in results:
-                    #     result['filter'] = filter
-                    #     documents.append(result)
-
-                    retrieved_info = [dict(result) for result in results]  # Convert results to list of dicts
-                    documents.append({
-                        'filter': filter,
-                        'retrieved_info': retrieved_info
-                    })    
-                        
+                    retrieved_info = [
+                        dict(result) for result in results
+                    ]  # Convert results to list of dicts
+                    documents.append(
+                        {"filter": filter, "retrieved_info": retrieved_info}
+                    )
 
             else:
                 results = search_client.search(
@@ -237,17 +236,22 @@ class VSearch:
                     ],
                     top=4,
                 )
-            
+
             # Process each 'retrieved_info' in the documents
             processed_texts = []
             for document in documents:
                 # Join all data in 'retrieved_info' into a single text
-                joined_text = '\n\n'.join(self.result_to_string(result) for result in document['retrieved_info'])
+                joined_text = "\n\n".join(
+                    self.result_to_string(result)
+                    for result in document["retrieved_info"]
+                )
                 processed_texts.append(joined_text)
 
             # Join all processed texts into one document with the specified format
-            final_document = '\n\n```\n' + '\n\n```\n\n```\n'.join(processed_texts) + '\n```'                          
-            
+            final_document = (
+                "\n\n```\n" + "\n\n```\n\n```\n".join(processed_texts) + "\n```"
+            )
+
             return final_document
 
         except ValueError as e:
