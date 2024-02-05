@@ -26,3 +26,7 @@ def get_json_field(json_string, field_name):
         return field_value
     else:
         return f"'{field_name}' key not found"
+
+
+def result_to_string(self, result):
+        return '\n'.join(f"{key}: {value}" for key, value in result.items())

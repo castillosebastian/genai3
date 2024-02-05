@@ -1,0 +1,40 @@
+
+Company Name and Stock Ticker Symbol	ticker
+3M Company (NYSE:MMM)	NYSE:MMM
+Abbott Laboratories (NYSE:ABT)	NYSE:ABT
+AbbVie Inc. (NYSE:ABBV)	NYSE:ABBV
+Bausch + Lomb Corporation (NYSE:BLCO)	NYSE:BLCO
+Baxter International Inc. (NYSE:BAX)	NYSE:BAX
+BeiGene, Ltd. (NasdaqGS:BGNE)	NasdaqGS:BGNE
+Biogen Inc. (NasdaqGS:BIIB)	NasdaqGS:BIIB
+Bio-Rad Laboratories, Inc. (NYSE:BIO)	NYSE:BIO
+Boston Scientific Corporation (NYSE:BSX)	NYSE:BSX
+Bristol-Myers Squibb Company (NYSE:BMY)	NYSE:BMY
+DexCom, Inc. (NasdaqGS:DXCM)	NasdaqGS:DXCM
+Ecolab Inc. (NYSE:ECL)	NYSE:ECL
+Edgewell Personal Care Company (NYSE:EPC)	NYSE:EPC
+Eli Lilly and Company (NYSE:LLY)	NYSE:LLY
+Enovis Corporation (NYSE:ENOV)	NYSE:ENOV
+General Electric Company (NYSE:GE)	NYSE:GE
+Honeywell International Inc. (NasdaqGS:HON)	NasdaqGS:HON
+Humana Inc. (NYSE:HUM)	NYSE:HUM
+ICU Medical, Inc. (NasdaqGS:ICUI)	NasdaqGS:ICUI
+Illumina, Inc. (NasdaqGS:ILMN)	NasdaqGS:ILMN
+Johnson & Johnson (NYSE:JNJ)	NYSE:JNJ
+Merck & Co., Inc. (NYSE:MRK)	NYSE:MRK
+Mondelez International, Inc. (NasdaqGS:MDLZ)	NasdaqGS:MDLZ
+Perrigo Company plc (NYSE:PRGO)	NYSE:PRGO
+Pfizer Inc. (NYSE:PFE)	NYSE:PFE
+Seagen Inc.(NasdaqGS:SGEN)	NasdaqGS:SGEN
+Teleflex Incorporated (NYSE:TFX)	NYSE:TFX
+Teva Pharmaceutical Industries Limited (NYSE:TEVA)	NYSE:TEVA
+The Cooper Companies, Inc. (NasdaqGS:COO)	NasdaqGS:COO
+The Estee Lauder Companies Inc. (NYSE:EL)	NYSE:EL
+The Hain Celestial Group, Inc. (NasdaqGS:HAIN)	NasdaqGS:HAIN
+The Hershey Company (NYSE:HSY)	NYSE:HSY
+The Procter & Gamble Company (NYSE:PG)	NYSE:PG
+Thermo Fisher Scientific Inc. (NYSE:TMO)	NYSE:TMO
+United Therapeutics Corporation (NasdaqGS:UTHR)	NasdaqGS:UTHR
+UnitedHealth Group Incorporated (NYSE:UNH)	NYSE:UNH
+Vertex Pharmaceuticals Incorporated (NasdaqGS:VRTX)	NasdaqGS:VRTX
+Viatris Inc. (NasdaqGS:VTRS)	NasdaqGS:VTRS

@@ -24,20 +24,23 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-AZURE_AISEARCH_ENDPOINT = os.getenv("AZURE_AISEARCH_ENDPOINT")
+AZURE_AISEARCH_ENDPOINT = os.getenv("AZURE_SEARCH_ENDPOINT")
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
 AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION")
 AZURE_OPENAI_DEPLOYMENT_NAME = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
 AZURE_OPENAI_EMBEDDINGS_MODEL_NAME = os.getenv("AZURE_OPENAI_EMBEDDINGS_MODEL_NAME")
-AZURE_AISEARCH_INDEX_NAME = os.getenv("AZURE_AISEARCH_INDEX_NAME")
-credential = AzureKeyCredential(os.getenv("AZURE_AISEARCH_API_KEY"))
+AZURE_AISEARCH_INDEX_NAME = os.getenv("AZURE_SEARCH_INDEX_NAME")
+credential = AzureKeyCredential(os.getenv("AZURE_SEARCH_KEY"))
 embeddings = os.environ["AZURE_OPENAI_EMBEDDINGS_MODEL_NAME"]
 
 
 class VSearch:
     """
-    
+    Python Class that take a user question, preprocess the ask, execute a hybrid search + filter. The latter is executed if a company ticker, location
+    or date is extracted from the ask. If more than one ticker is extracted, one query per ticker is executed. 
+    Todo: 
+        Pos-processing:  the output in caso of ask related to 3 tickers or more
     """
     def __init__(self):
         """
@@ -64,88 +67,76 @@ class VSearch:
                 api_key=AZURE_OPENAI_API_KEY,
         )
     
+    # Auxiliary Functions
+        
     def build_query_filter(self, json_object) -> str:
         """
         Convert Json object with extracted entities en query filter for AI Search Index.
         """
+        if not isinstance(json_object, dict):
+            raise TypeError("json_object must be a dictionary")
+        
         try:
             # Initialize a list to hold filter strings
             filters = []
-            # Convert company names to uppercase, or use [None] if company_name is None
-            companies = (
-                [company.upper() for company in json_object["company_name"]]
-                if json_object.get("company_name") is not None
+            # Convert ticker names to uppercase, or use [None] if ticker_name is None
+            tickers = (
+                [ticker.upper() for ticker in json_object["ticker"]]
+                if json_object.get("ticker") is not None
                 else [None]
             )
-            # Check and prepare country and dates outside the loop
-            country = json_object["country"][0] if json_object.get("country") else None
-            year = json_object["dates"][0][:4] if json_object.get("dates") else None
-            # Loop through each company
-            for company in companies:
-                # Initialize components of the filter for this company
+            # Check and prepare referenced_location and referenced_year outside the loop
+            referenced_location = json_object["location"][0] if json_object.get("location") else None
+            referenced_year = json_object["dates"][0][:4] if json_object.get("dates") else None
+            # Loop through each ticker
+            for ticker in tickers:
+                # Initialize components of the filter for this ticker
                 filter_components = []
-                # Add company filter if company exists
-                if company:
-                    filter_components.append(f"Description eq '{company}'")
-                # Add country filter if country exists
-                if country:
-                    filter_components.append(f"Country eq '{country}'")
-                # Add date filter if dates exist
-                if year:
-                    filter_components.append(f"AdditionalMetadata eq '{year}'")
-                # Check if any filter component was added for this company/criteria
+                # Add ticker filter if ticker exists
+                if ticker:
+                    filter_components.append(f"referenced_entity eq '{ticker}'")
+                # Add referenced_location filter if referenced_location exists
+                if referenced_location:
+                    filter_components.append(f"referenced_location eq '{referenced_location}'")
+                # Add date filter if referenced_year exist
+                if referenced_year:
+                    filter_components.append(f"referenced_year eq '{referenced_year}'")
+                # Check if any filter component was added for this ticker/criteria
                 if filter_components:
                     # Join all components with 'and'
                     filter_query = " and ".join(filter_components)
                     filters.append(filter_query)
-            # Check if any filter was created
-            if not filters:
-                return None
-            return filters
+            # Check if any filter was created            
+            return filters if filters else None
         except Exception as e:
             # Handle any exception that occurs during processing
             return [f"Error building query filter: {e}"]
 
-    async def format_hybrid_search_results(self, hybrid_search_results) -> str:
+    def format_search_results(self, documents, metadata_filters=None):
         """
-        Turn multiple document retrieved from AIS Index into single document.
-        """
+        The AI search return an iterator over the Index, so this function extract the document text and metadata.
+        """        
+        if not any(doc.get("retrieved_info") for doc in documents):
+            return f"No documents found for this question's related search: {metadata_filters}"
+        
+        # Format and return search results
         try:
-            formatted_results = [
-                f"""ID: {result['Id']}
-                    Text: {result['Text']}
-                    ExternalSourceName: {result['ExternalSourceName']}
-                    Source: {result['Description']}
-                    AdditionalMetadata: {result['AdditionalMetadata']}
-                    """
-                for result in hybrid_search_results
-            ]
-            formatted_string = ""
-            for i, doc in enumerate(formatted_results):
-                # formatted_string += f"\n<document {i+1}>\n\n {doc}\n"
-                formatted_string += f'\n""" {doc}\n"""\n\n'
-            return formatted_string
+            processed_texts = []
+            for document in documents:
+                joined_text = "\n\n".join(
+                    self.result_to_string(result)
+                    for result in document["retrieved_info"]
+                )
+                processed_texts.append(joined_text)
+            final_document = "\n\n```\n" + "\n\n```\n\n```\n".join(processed_texts) + "\n```"
+            return final_document
         except Exception as e:
-            # Handle any exception that occurs during processing
-            return [f"Error formatting retrieved documents: {e}"]
+            # Handle any exceptions that occur during formatting
+            error_message = f"Error occurred while formatting search results: {e}"
+            print(error_message)
+            return error_message
 
-    async def generate_embeddings(self, text: str) -> Optional[List[float]]:
-        """
-        Generates embeddings for the given text using Azure OpenAI.
-        Parameters:
-        text (str): The text for which to generate embeddings.
-        Returns:
-        Optional[List[float]]: A list of floats representing the embedding, or None if an error occurs.
-        """
-        try:
-            response = self.openai_client.embeddings.create(
-                input=[text], model=AZURE_OPENAI_EMBEDDINGS_MODEL_NAME
-            )
-            return response.data[0].embedding
-        except Exception as e:
-            print(f"Error generating embeddings: {e}")
-            return None
-
+    
     def string_to_json(self, string):
         try:
             # Convert the string to a JSON object
@@ -158,33 +149,58 @@ class VSearch:
     def result_to_string(self, result):
         return "\n".join(f"{key}: {value}" for key, value in result.items())
 
-    @kernel_function(
-        description="This function search finance information from public filings of any company.",
-        name="retrieve_documents",
-        # input_description="A user query related to factual data or insight from financial documents",
-    )
-    async def retrieve_documents(self, context: KernelContext) -> str:
-        try:           
+    # Auxiliary function: Async
 
+    async def generate_embeddings(self, text: str) -> Optional[List[float]]:
+        """
+        Generates embeddings for the given text using Azure OpenAI.                
+        """
+        try:
+            response = self.openai_client.embeddings.create(
+                input=[text], model=AZURE_OPENAI_EMBEDDINGS_MODEL_NAME
+            )
+            return response.data[0].embedding
+        except Exception as e:
+            print(f"Error generating embeddings: {e}")
+            return None
+
+    async def extract_entities(self, context):
+        """
+          Extract entities using kernel and plugins.
+          Todo: 
+            -add ticker reference dinamically to prompt to increasy precision of the ticker extraction. Ticker
+             reference come from the unique values of the field 'referenced_entity'.
+        """
+        try:
             kernel = sk.Kernel()
             kernel.add_chat_service("chat_completion", self.azure_chat_service)
             kernel.add_text_embedding_generation_service("ada", self.azure_text_embedding)
-            pluginASKT = kernel.import_semantic_plugin_from_directory(
-                "plugins", "ASKProcess"
-            )
+            pluginASKT = kernel.import_semantic_plugin_from_directory("plugins", "ASKProcess")
             extract_entities = pluginASKT["extractEntities"]
 
             my_context = kernel.create_new_context()
             my_context["ask"] = context["input"]["ask"]
 
             response = await kernel.run(extract_entities, input_context=my_context)
-            # response = extract_entities.invoke(context["input"]["ask"])
+            return self.string_to_json(response["input"])
+        except Exception as e:
+            error_message = f"Error occurred while extracting entities: {e}"
+            print(error_message)
+            return error_message
 
-            ask_entities = self.string_to_json(response["input"])
+    # Main native function
 
-            metadata_filters = self.build_query_filter(ask_entities)
+    @kernel_function(
+        description="This function search finance information from public filings of any ticker.",
+        name="retrieve_documents",
+        input_description="A user question related to financial information related to a company or companies",
+    )
+    async def retrieve_documents(self, context: KernelContext) -> str:
+        try:           
 
-            # metadata_filter = metadata_filter[0] if metadata_filter else metadata_filter
+            entities = await self.extract_entities(context)
+
+            metadata_filters = self.build_query_filter(entities)            
 
             search_client = SearchClient(
                 AZURE_AISEARCH_ENDPOINT,
@@ -195,7 +211,7 @@ class VSearch:
             vquery = await self.generate_embeddings(context["input"]["ask"])
 
             vector_query = VectorizedQuery(
-                vector=vquery, k_nearest_neighbors=5, fields="Embedding"
+                vector=vquery, k_nearest_neighbors=5, fields="embedding"
             )
 
             # this list only aply if metada filter
@@ -209,52 +225,38 @@ class VSearch:
                         vector_filter_mode=VectorFilterMode.PRE_FILTER,
                         filter=filter,
                         select=[
-                            "Text",
-                            "Id",
-                            "ExternalSourceName",
-                            "Description",
-                            "AdditionalMetadata",
+                            "document",
+                            "id",
+                            "referenced_entity",
+                            "referenced_year",
+                            "filename",
                         ],
                         top=4,
                     )
-
                     retrieved_info = [
                         dict(result) for result in results
                     ]  # Convert results to list of dicts
                     documents.append(
                         {"filter": filter, "retrieved_info": retrieved_info}
                     )
-
             else:
                 results = search_client.search(
                     search_text=context["input"]["ask"],
                     vector_queries=[vector_query],
                     select=[
-                        "Text",
-                        "Id",
-                        "ExternalSourceName",
-                        "Description",
-                        "AdditionalMetadata",
+                        "document",
+                        "id",
+                        "referenced_entity",
+                        "referenced_year",
+                        "filename",
                     ],
                     top=4,
                 )
-                retrieved_info = [dict(result) for result in results]
+                retrieved_info = [dict(result) for result in results]                
                 documents.append({"filter": None, "retrieved_info": retrieved_info})
 
             # Process each 'retrieved_info' in the documents
-            processed_texts = []
-            for document in documents:
-                # Join all data in 'retrieved_info' into a single text
-                joined_text = "\n\n".join(
-                    self.result_to_string(result)
-                    for result in document["retrieved_info"]
-                )
-                processed_texts.append(joined_text)
-
-            # Join all processed texts into one document with the specified format
-            final_document = (
-                "\n\n```\n" + "\n\n```\n\n```\n".join(processed_texts) + "\n```"
-            )
+            final_document = self.format_search_results(documents, filter)
 
             return final_document
 

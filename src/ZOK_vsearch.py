@@ -31,10 +31,13 @@ async def main() -> None:
 
     if single_question:
         # Test single question-------------------------------------------------------
-        #ask = "What is the revenue of Microsoft?" # Test simple OK
+        #ask = "What is the revenue?" # Test simple OK
+        #ask = "What is the revenue of 3M" # Test simple OK
+        #ask = "What is the revenue of Kellogg 2022?" # Test simple OK
+        #ask = "What is the revenue of Eli Lilly 2022?" # Test simple OK
         #ask = "What is the revenue of Pfizer?" # Test simple OK
-        ask = "What is the revenue of Pfizer and Microsoft?" # Test simple OK
-        #ask = "What is the revenue of Pfizer, BestBuy and Microsoft?" # Test simple OK
+        #ask = "What is the revenue of Pfizer and Microsoft?" # Test simple OK
+        ask = "What is the revenue of Kellogg and 3M?" # Test simple OK
         #ask = "What is the revenue?" # Test execution with filter == None OK
         #ask = "In agreement with the information outlined in the income statement, what is average net profit margin (as a %) for Best Buy?"
 
