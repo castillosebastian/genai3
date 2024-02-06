@@ -112,22 +112,33 @@ class VSearch:
             # Handle any exception that occurs during processing
             return [f"Error building query filter: {e}"]
 
-    def format_search_results(self, documents, metadata_filters=None):
+    def format_search_results(self, documents, metadata_filters=None, score_include=False):
         """
-        The AI search return an iterator over the Index, so this function extract the document text and metadata.
+        The AI search returns an iterator over the Index, so this function extracts the document text and metadata.
         """        
         if not any(doc.get("retrieved_info") for doc in documents):
             return f"No documents found for this question's related search: {metadata_filters}"
         
+        # Define a lambda function to extract specific fields
+        extract_fields = lambda result: {k: result[k] for k in ['referenced_entity','referenced_year','document','filename'] if k in result}
+
         # Format and return search results
         try:
             processed_texts = []
             for document in documents:
+                if score_include:
+                    # Use the original result object without filtering
+                    results_to_process = document["retrieved_info"]
+                else:
+                    # Use filtered result
+                    results_to_process = [extract_fields(result) for result in document["retrieved_info"]]
+
                 joined_text = "\n\n".join(
                     self.result_to_string(result)
-                    for result in document["retrieved_info"]
+                    for result in results_to_process
                 )
                 processed_texts.append(joined_text)
+
             final_document = "\n\n```\n" + "\n\n```\n\n```\n".join(processed_texts) + "\n```"
             return final_document
         except Exception as e:
@@ -135,7 +146,6 @@ class VSearch:
             error_message = f"Error occurred while formatting search results: {e}"
             print(error_message)
             return error_message
-
     
     def string_to_json(self, string):
         try:
@@ -166,10 +176,10 @@ class VSearch:
 
     async def extract_entities(self, context):
         """
-          Extract entities using kernel and plugins.
-          Todo: 
-            -add ticker reference dinamically to prompt to increasy precision of the ticker extraction. Ticker
-             reference come from the unique values of the field 'referenced_entity'.
+        Extract entities using kernel and plugins.
+        Todo: 
+        -add ticker reference dinamically to prompt to increasy precision of the ticker extraction. Ticker
+            reference come from the unique values of the field 'referenced_entity'.
         """
         try:
             kernel = sk.Kernel()
@@ -191,7 +201,7 @@ class VSearch:
     # Main native function
 
     @kernel_function(
-        description="This function search finance information from public filings of any ticker.",
+        description="This function search finance information from public filings of any company.",
         name="retrieve_documents",
         input_description="A user question related to financial information related to a company or companies",
     )
@@ -235,9 +245,9 @@ class VSearch:
                     )
                     retrieved_info = [
                         dict(result) for result in results
-                    ]  # Convert results to list of dicts
+                    ]  # Convert results to list of dicts                    
                     documents.append(
-                        {"filter": filter, "retrieved_info": retrieved_info}
+                         {"filter": filter, "retrieved_info": retrieved_info}
                     )
             else:
                 results = search_client.search(
