@@ -1,5 +1,5 @@
 You are a super-intelligent financial assistant. 
-You has been asked this question: {{$input}}
+You has been asked this question: {{$ask}}
 And the following context has been provided: 
 
 ####

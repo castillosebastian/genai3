@@ -204,9 +204,9 @@ class VSearch:
         description="This function search finance information from public filings of any company.",
         name="retrieve_documents",
         input_description="A user question related to financial information related to a company or companies",
-    )
+    )    
     async def retrieve_documents(self, context: KernelContext) -> str:
-        try:           
+        try:
 
             entities = await self.extract_entities(context)
 
@@ -241,7 +241,7 @@ class VSearch:
                             "referenced_year",
                             "filename",
                         ],
-                        top=4,
+                        top=3,
                     )
                     retrieved_info = [
                         dict(result) for result in results
@@ -260,13 +260,13 @@ class VSearch:
                         "referenced_year",
                         "filename",
                     ],
-                    top=4,
+                    top=3,
                 )
                 retrieved_info = [dict(result) for result in results]                
                 documents.append({"filter": None, "retrieved_info": retrieved_info})
 
-            # Process each 'retrieved_info' in the documents
-            final_document = self.format_search_results(documents, filter)
+            # Process each 'retrieved_info' in the documents            
+            final_document = self.format_search_results(documents, filter, score_include=context["input"]['score_include'])
 
             return final_document
 
